@@ -10,7 +10,7 @@ $|  = 1;
 use warnings;
 use Config;
 
-plan tests => 122;
+plan tests => 132;
 
 my $Perl = which_perl();
 
@@ -391,3 +391,28 @@ sub _117941 { package _117941; open my $a, "TEST" }
 delete $::{"_117941::"};
 _117941();
 pass("no crash when open autovivifies glob in freed package");
+
+# [perl #117265] check for embedded nul in pathnames, allow ending \0 though
+{
+  my $WARN;
+  local $SIG{__WARN__} = sub { $WARN = shift };
+  my $fn = "tmp\0.invalid";
+  is(open(I, $fn), undef, "open with nul in pathnames since 5.18 [perl #117265]");
+  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+       "warn on embedded nul"); $WARN = '';
+  is (unlink($fn), 0);
+  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+       "also on unlink"); $WARN = '';
+  is(chmod(0644, $fn), 0);
+  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+       "also on chmod"); $WARN = '';
+  is (glob($fn), ());
+  like($WARN, qr/^Invalid \\0 character in syscall: tmp/,
+       "also on glob"); $WARN = '';
+  {
+    no warnings 'syscalls';
+    $WARN = '';
+    is(open(I, $fn), undef, "open with nul with no warnings syscalls");
+    is($WARN, '', "ignore warning on embedded nul with no warnings syscalls");
+  }
+}
