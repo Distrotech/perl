@@ -152,6 +152,7 @@ my @writables = qw(
     reentr.h
     regcharclass.h
     regnodes.h
+    trie.h
     warnings.h
     lib/warnings.pm
     win32/Makefile
