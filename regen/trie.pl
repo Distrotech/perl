@@ -137,7 +137,59 @@ BEGIN {
             unshift @agenda, @more;
         }
 
+        @edges = $self->_optimise(@edges);
+
         $self->{edges} = [map sprintf('EDGE(0x%.2X, %s, %u),', @$_), @edges];
+    }
+
+    # Optimise the generated automaton by finding nodes which form a proper
+    # suffix of some other node, and causing them to share storage.
+    sub _optimise {
+        my ($self, @edges) = @_;
+
+        for my $label (reverse $self->_ordered_labels) {
+            my $newpos = $self->_find_sharing($label, \@edges);
+            next if !defined $newpos;
+            my $oldpos = $self->{label_pos}{$label};
+
+            my $oldend = $oldpos - 1;
+            1 while !$edges[$oldend++][2];
+            my $len = $oldend - $oldpos + 1;
+
+            splice @edges, $oldpos, $len;
+            $self->{label_pos}{$label} = $newpos;
+            $_ > $oldend and $_ -= $len
+                for values %{ $self->{label_pos} };
+        }
+
+        return @edges;
+    }
+
+    sub _find_sharing {
+        my ($self, $curr, $edges) = @_;
+
+        for my $other ($self->_ordered_labels) {
+            next if $curr eq $other; # don't find sharing with self
+            # For each proper suffix of $other, in decreasing-length order,
+            # determine whether $curr is equal to that proper suffix.
+            for my $i ($self->{label_pos}{$other} + 1 .. $#$edges) {
+                return $i if $self->_is_tail($edges, $self->{label_pos}{$curr}, $i);
+                last if $edges->[$i][2];
+            }
+        }
+
+        return undef;
+    }
+
+    sub _is_tail {
+        my ($self, $edges, $x, $y) = @_;
+        return 0 if $x == $y;
+        while ($x < @$edges && $y < @$edges) {
+            my ($edge_x, $edge_y) = map join('-', @{ $edges->[$_] }), $x, $y;
+            return 0 if $edge_x ne $edge_y;
+            return 1 if $edges->[$x][2];
+            $x++, $y++;
+        }
     }
 
     sub _label_definitions {

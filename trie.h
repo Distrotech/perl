@@ -59,14 +59,14 @@ static const Edge forward_whitespace[] = {
 
 #define REVWS_ROOT                   0
 #define REVWS_MATCH_80E2_C2         22
+#define REVWS_MATCH_C2              23
 #define REVWS_MATCH_E2              24
-#define REVWS_MATCH_C2              25
-#define REVWS_MATCH_80E2to80E3_9AE1 26
-#define REVWS_MATCH_E1              28
-#define REVWS_MATCH_E2toE3          29
-#define REVWS_MATCH_80E2            31
-#define REVWS_MATCH_81E2            32
-#define REVWS_LEN                   33
+#define REVWS_MATCH_80E2to80E3_9AE1 25
+#define REVWS_MATCH_E1              27
+#define REVWS_MATCH_E2toE3          28
+#define REVWS_MATCH_80E2            30
+#define REVWS_MATCH_81E2            31
+#define REVWS_LEN                   32
 
 static const Edge reverse_whitespace[] = {
     EDGE(0x09, REVWS_ROOT, 0),                  /*  0: REVWS_ROOT */
@@ -92,16 +92,15 @@ static const Edge reverse_whitespace[] = {
     EDGE(0xA9, REVWS_MATCH_80E2, 0),
     EDGE(0xAF, REVWS_MATCH_80E2, 1),
     EDGE(0x80, REVWS_MATCH_E2, 0),              /* 22: REVWS_MATCH_80E2_C2 */
-    EDGE(0xC2, REVWS_ROOT, 1),
+    EDGE(0xC2, REVWS_ROOT, 1),                  /* 23: REVWS_MATCH_C2 */
     EDGE(0xE2, REVWS_ROOT, 1),                  /* 24: REVWS_MATCH_E2 */
-    EDGE(0xC2, REVWS_ROOT, 1),                  /* 25: REVWS_MATCH_C2 */
-    EDGE(0x80, REVWS_MATCH_E2toE3, 0),          /* 26: REVWS_MATCH_80E2to80E3_9AE1 */
+    EDGE(0x80, REVWS_MATCH_E2toE3, 0),          /* 25: REVWS_MATCH_80E2to80E3_9AE1 */
     EDGE(0x9A, REVWS_MATCH_E1, 1),
-    EDGE(0xE1, REVWS_ROOT, 1),                  /* 28: REVWS_MATCH_E1 */
-    EDGE(0xE2, REVWS_ROOT, 0),                  /* 29: REVWS_MATCH_E2toE3 */
+    EDGE(0xE1, REVWS_ROOT, 1),                  /* 27: REVWS_MATCH_E1 */
+    EDGE(0xE2, REVWS_ROOT, 0),                  /* 28: REVWS_MATCH_E2toE3 */
     EDGE(0xE3, REVWS_ROOT, 1),
-    EDGE(0x80, REVWS_MATCH_E2, 1),              /* 31: REVWS_MATCH_80E2 */
-    EDGE(0x81, REVWS_MATCH_E2, 1),              /* 32: REVWS_MATCH_81E2 */
+    EDGE(0x80, REVWS_MATCH_E2, 1),              /* 30: REVWS_MATCH_80E2 */
+    EDGE(0x81, REVWS_MATCH_E2, 1),              /* 31: REVWS_MATCH_81E2 */
 };
 
 
