@@ -8484,7 +8484,7 @@ Perl_yylex(pTHX)
 		    gv_stashpvn(PL_tokenbuf, strlen(PL_tokenbuf),
                                 GV_ADD | (UTF ? SVf_UTF8 : 0));
 		else if (*s == '<')
-		    yyerror("<> should be quotes");
+		    yyerror("<> at require-statement should be quotes");
 	    }
 	    if (orig_keyword == KEY_require) {
 		orig_keyword = 0;
