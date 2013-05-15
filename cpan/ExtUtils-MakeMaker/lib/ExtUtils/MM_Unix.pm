@@ -962,6 +962,14 @@ MAKE
 	- $(CP_NONEMPTY) $(BOOTSTRAP) $(INST_BOOT) $(PERM_RW)
 MAKE
 
+    if ( $Config::Config{d_libname_unique} ) {
+        push @m, <<'MAKE';
+# --- d_libname_unique is true, so library names should be "unique"
+	$(MV) $(INST_DYNAMIC) $(INST_ARCHAUTODIR)/Perl_$(NAME_SYM).$(DLEXT)
+	-$(MV) $(INST_BOOT) $(INST_ARCHAUTODIR)/Perl_$(NAME_SYM).bs
+MAKE
+    }
+
     return join('',@m);
 }
 
