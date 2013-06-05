@@ -32,6 +32,7 @@ my %feature = (
     unicode_eval    => 'unieval',
     unicode_strings => 'unicode',
     fc              => 'fc',
+    dots            => 'dots',
 );
 
 # NOTE: If a feature is ever enabled in a non-contiguous range of Perl
@@ -51,7 +52,7 @@ my %feature_bundle = (
     "5.17"   =>	[qw(say state switch unicode_strings unicode_eval
 		    evalbytes current_sub fc)],
     "5.19"   =>	[qw(say state switch unicode_strings unicode_eval
-		    evalbytes current_sub fc)],
+		    evalbytes current_sub fc dots)],
 );
 
 # not actually used currently

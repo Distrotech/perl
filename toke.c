@@ -5608,40 +5608,39 @@ Perl_yylex(pTHX)
 		s = --PL_bufptr;
 	    }
 	}
-	{
-	    const char tmp = *s++;
-	    if (*s == tmp) {
-		s++;
-		if (PL_expect == XOPERATOR)
-		    TERM(POSTDEC);
-		else
-		    OPERATOR(PREDEC);
+	s++;
+	if (*s == '-') {
+	    s++;
+	    if (PL_expect == XOPERATOR)
+		TERM(POSTDEC);
+	    else
+		OPERATOR(PREDEC);
+	}
+	else if (*s == '>') {
+	    s++;
+	  arrow:
+	    s = SKIPSPACE1(s);
+	    if (isIDFIRST_lazy_if(s,UTF)) {
+		s = force_word(s,METHOD,FALSE,TRUE,FALSE);
+		TOKEN(ARROW);
 	    }
-	    else if (*s == '>') {
-		s++;
-		s = SKIPSPACE1(s);
-		if (isIDFIRST_lazy_if(s,UTF)) {
-		    s = force_word(s,METHOD,FALSE,TRUE,FALSE);
-		    TOKEN(ARROW);
-		}
-		else if (*s == '$')
-		    OPERATOR(ARROW);
-		else
-		    TERM(ARROW);
+	    else if (*s == '$')
+		OPERATOR(ARROW);
+	    else
+		TERM(ARROW);
+	}
+	if (PL_expect == XOPERATOR) {
+	    if (*s == '=' && !PL_lex_allbrackets &&
+	    	PL_lex_fakeeof >= LEX_FAKEEOF_ASSIGN) {
+		s--;
+		TOKEN(0);
 	    }
-	    if (PL_expect == XOPERATOR) {
-		if (*s == '=' && !PL_lex_allbrackets &&
-			PL_lex_fakeeof >= LEX_FAKEEOF_ASSIGN) {
-		    s--;
-		    TOKEN(0);
-		}
-		Aop(OP_SUBTRACT);
-	    }
-	    else {
-		if (isSPACE(*s) || !isSPACE(*PL_bufptr))
-		    check_uni();
-		OPERATOR('-');		/* unary minus */
-	    }
+	    Aop(OP_SUBTRACT);
+	}
+	else {
+	    if (isSPACE(*s) || !isSPACE(*PL_bufptr))
+		check_uni();
+	    OPERATOR('-');		/* unary minus */
 	}
 
     case '+':
@@ -5741,7 +5740,10 @@ Perl_yylex(pTHX)
 	    Eop(OP_SMARTMATCH);
 	}
 	s++;
-	OPERATOR('~');
+        if (FEATURE_DOTS_IS_ENABLED && PL_expect == XOPERATOR)
+            Aop(OP_CONCAT);
+        else
+            OPERATOR('~');
     case ',':
 	if (!PL_lex_allbrackets && PL_lex_fakeeof >= LEX_FAKEEOF_COMMA)
 	    TOKEN(0);
@@ -6688,11 +6690,13 @@ Perl_yylex(pTHX)
 		    pl_yylval.ival = 0;
 		OPERATOR(DOTDOT);
 	    }
-	    if (*s == '=' && !PL_lex_allbrackets &&
-		    PL_lex_fakeeof >= LEX_FAKEEOF_ASSIGN) {
-		s--;
-		TOKEN(0);
-	    }
+            if (FEATURE_DOTS_IS_ENABLED)
+                goto arrow;
+            if (*s == '=' && !PL_lex_allbrackets &&
+                    PL_lex_fakeeof >= LEX_FAKEEOF_ASSIGN) {
+                s--;
+                TOKEN(0);
+            }
 	    Aop(OP_CONCAT);
 	}
 	/* FALL THROUGH */
