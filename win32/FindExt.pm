@@ -13,6 +13,8 @@ sub apply_config {
     my ($config) = @_;
     my @no;
 
+    push @no, 'Sys-Syslog' if $^O eq 'MSWin32';
+
     # duplicates logic from Configure (mostly)
     push @no, "DB_File" unless $config->{i_db};
     push @no, "GDBM_File" unless $config->{i_gdbm};
