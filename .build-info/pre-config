@@ -1,0 +1,4 @@
+#!/bin/bash
+
+make realclean
+rm Policy.sh config.sh
