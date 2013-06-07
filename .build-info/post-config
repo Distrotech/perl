@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for pdir in `ls cpan`;do
+  if [ -f cpan/${pdir}/Makefile.PL ];then
+    (cd cpan/${pdir}
+    perl Makefile.PL
+    make clean all)
+  fi;
+done
