@@ -3337,6 +3337,7 @@ S_fold_constants(pTHX_ OP *o)
 	    SvREFCNT_inc_simple_void(sv);
 	    SvTEMP_off(sv);
 	}
+	else { assert(SvIMMORTAL(sv)); }
 	break;
     case 3:
 	/* Something tried to die.  Abandon constant folding.  */
