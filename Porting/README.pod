@@ -312,15 +312,6 @@ This is a script for sorting the warning and error messages in
 F<perldiag.pod>.  POD formatting, printf-style escapes, non-letter characters,
 and case are ignored, as explained in L<perldiag>.
 
-=head2 F<testall.atom>
-
-Test suite profiling on Tru 64.
-
-=head2 F<thirdclean>
-
-Script for cleaning out the "known noise" from Third Degree reports: either
-noise caused by F<libc> itself, or F<Perl_yyparse> leaks.
-
 =head2 F<time>
 
 A helper tool for perl's 2038 support. See F<Porting/README.y2038> for details.
