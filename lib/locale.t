@@ -1352,6 +1352,26 @@ foreach $Locale (@Locale) {
 	    print "# failed $locales_test_number locale '$Locale' numbers @f\n"
 	}
     }
+
+    { # [perl #112208]
+        my @f = ();
+        ++$locales_test_number;
+        $test_names{$locales_test_number} = 'Verify all possible $! are utf8 consistent';
+
+        use Errno;
+        setlocale(&POSIX::LC_MESSAGES, $Locale);
+        foreach my $errno (keys %!) {
+            $!=eval "Errno::$errno";
+            next if utf8::valid($!);
+            push @f, "$errno: $!";
+            last;
+        }
+
+	tryneoalpha($Locale, $locales_test_number, @f == 0);
+	if (@f) {
+	    print "# failed $locales_test_number locale '$Locale' numbers @f\n"
+	}
+    }
 }
 
 my $final_locales_test_number = $locales_test_number;
