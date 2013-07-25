@@ -20,7 +20,7 @@ BEGIN {
     require './test.pl';
 }
 
-plan tests => 696;  # Update this when adding/deleting tests.
+plan tests => 698;  # Update this when adding/deleting tests.
 
 run_tests() unless caller;
 
