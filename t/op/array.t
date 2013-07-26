@@ -6,7 +6,7 @@ BEGIN {
     require 'test.pl';
 }
 
-plan (127);
+plan (128);
 
 #
 # @foo, @bar, and @ary are also used from tie-stdarray after tie-ing them
@@ -466,5 +466,9 @@ package peen {
 	'arylen_p magic does not stop isa magic from being copied';
 }
 
+$_ = \$#{[]};
+$$_ = \1;
+"$$_";
+pass "no assertion failure after assigning ref to arylen when ary is gone";
 
 "We're included by lib/Tie/Array/std.t so we need to return something true";
