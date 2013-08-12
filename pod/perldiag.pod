@@ -2498,14 +2498,11 @@ the indicated name isn't valid.  See L<charnames/CUSTOM ALIASES>.
 (F) Only certain characters are valid for character names.  The
 indicated one isn't.  See L<charnames/CUSTOM ALIASES>.
 
-=item Invalid \0 character in %s: %s\0%s
+=item Invalid \0 character in %s for %s: %s\0%s
 
-(S) Embedded \0 characters in pathnames or other syscall arguments
-create a warning since 5.18. The parts after the \0 were formerly
-ignored by syscalls.
-
-If you know what you are doing you can turn off this warning by
-C<no warnings 'syscalls';>.
+(W syscalls) Embedded \0 characters in pathnames or other syscall
+arguments create a warning since 5.20. The parts after the \0 were
+formerly ignored by syscalls.
 
 =item Invalid conversion in %s: "%s"
 

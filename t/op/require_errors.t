@@ -7,7 +7,7 @@ BEGIN {
     require './test.pl';
 }
 
-plan(tests => 16);
+plan(tests => 17);
 
 my $nonfile = tempfile();
 
@@ -121,8 +121,14 @@ like $@, qr/^Can't locate strict\.pm\\0invalid: /, 'do nul check';
   my $WARN;
   local $SIG{__WARN__} = sub { $WARN = shift };
   eval { require "strict.pm\0invalid"; };
-  like $WARN, qr{^Invalid \\0 character in pathname: strict\.pm\\0invalid at }, 'nul warning';
+  like $WARN, qr{^Invalid \\0 character in pathname for require: strict\.pm\\0invalid at }, 'nul warning';
   like $@, qr{^Can't locate strict\.pm\\0invalid: }, 'nul error';
+
+  $WARN = '';
+  local @INC = @INC;
+  unshift @INC, "lib\0invalid";
+  eval { require "unknown.pm" };
+  like $WARN, qr{^Invalid \\0 character in pathname for require: lib\\0invalid/unknown\.pm at }, 'nul warning';
 }
 eval "require strict\0::invalid;";
 like $@, qr/^syntax error at \(eval \d+\) line 1/, 'parse error with \0 in barewords module names';

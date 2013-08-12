@@ -40,6 +40,7 @@ my $tree = {
        				'newline'	=> [ 5.008, DEFAULT_OFF],
        				'exec'		=> [ 5.008, DEFAULT_OFF],
        				'layer'		=> [ 5.008, DEFAULT_OFF],
+				'syscalls'      => [ 5.019, DEFAULT_OFF],
 			   }],
      	'syntax'	=> [ 5.008, { 	
 				'ambiguous'	=> [ 5.008, DEFAULT_OFF],
@@ -59,7 +60,6 @@ my $tree = {
 	 			'internal'	=> [ 5.008, DEFAULT_OFF],
          			'debugging'	=> [ 5.008, DEFAULT_ON],
          			'malloc'	=> [ 5.008, DEFAULT_ON],
-			        'syscalls'      => [ 5.017, DEFAULT_ON],
 			   }],
         'deprecated'	=> [ 5.008, DEFAULT_ON],
        	'void'		=> [ 5.008, DEFAULT_OFF],

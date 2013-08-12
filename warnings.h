@@ -94,6 +94,9 @@
 #define WARN_EXPERIMENTAL__LEXICAL_TOPIC 53
 #define WARN_EXPERIMENTAL__REGEX_SETS 54
 #define WARN_EXPERIMENTAL__SMARTMATCH 55
+
+/* Warnings Categories added in Perl 5.019 */
+
 #define WARN_SYSCALLS		 56
 
 #define WARNsize		15

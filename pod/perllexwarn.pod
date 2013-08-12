@@ -252,6 +252,8 @@ will be lost.
          |                 |
          |                 +- pipe
          |                 |
+         |                 +- syscalls
+         |                 |
          |                 +- unopened
          |
          +- misc
@@ -281,8 +283,6 @@ will be lost.
          |                 +- internal
          |                 |
          |                 +- malloc
-         |                 |
-         |                 +- syscalls
          |
          +- signal
          |
