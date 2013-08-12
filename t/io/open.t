@@ -10,7 +10,7 @@ $|  = 1;
 use warnings;
 use Config;
 
-plan tests => 140;
+plan tests => 145;
 
 my $Perl = which_perl();
 
@@ -396,18 +396,29 @@ pass("no crash when open autovivifies glob in freed package");
 {
   my $WARN;
   local $SIG{__WARN__} = sub { $WARN = shift };
-  my $fn = "tmp\0.invalid";
+  my $temp = tempfile();
+  my $temp_match = quotemeta $temp;
+
+  # create the file, so we can check nothing actually touched it
+  open my $temp_fh, ">", $temp;
+  close $temp_fh;
+  ok(utime(time()-10, time(), $temp), "set mtime to a known value")
+    or diag("utime failed: $!";
+  ok(chmod(0666, $temp), "set mode to a known value");
+  my ($final_mode, $final_mtime) = (stat $temp)[2, 9];
+
+  my $fn = "$temp\0.invalid";
   is(open(I, $fn), undef, "open with nul in pathnames since 5.18 [perl #117265]");
-  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+  like($WARN, qr/^Invalid \\0 character in pathname: $temp_match\\0\.invalid/,
        "warn on embedded nul"); $WARN = '';
   is (unlink($fn), 0);
-  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+  like($WARN, qr/^Invalid \\0 character in pathname: $temp_match\\0\.invalid/,
        "also on unlink"); $WARN = '';
-  is(chmod(0644, $fn), 0);
-  like($WARN, qr/^Invalid \\0 character in pathname: tmp/,
+  is(chmod(0444, $fn), 0);
+  like($WARN, qr/^Invalid \\0 character in pathname: $temp_match\\0\.invalid/,
        "also on chmod"); $WARN = '';
   is (glob($fn), ());
-  like($WARN, qr/^Invalid \\0 character in syscall: tmp/,
+  like($WARN, qr/^Invalid \\0 character in syscall: $temp_match\\0\.invalid/,
        "also on glob"); $WARN = '';
   {
     no warnings 'syscalls';
@@ -419,6 +430,7 @@ pass("no crash when open autovivifies glob in freed package");
     use Errno 'ENOENT';
     # check handling of multiple arguments, which the original patch
     # mis-handled
+    # the errno checks will pass with TODO passed
     local $TODO = "multiple argument ops don't handle this correctly yet";
     $! = 0;
     is (unlink($fn, $fn), 0, "check multiple arguments to unlink");
@@ -435,4 +447,9 @@ pass("no crash when open autovivifies glob in freed package");
         is(chown(-1, -1, $fn, $fn), 0, "check multiple arguments to chown");
         is($!+0, ENOENT, "check errno");
     }
+
+    undef $TODO;
+    ok(-f $temp, "nothing removed the temp file");
+    is((stat $temp)[2], $final_mode, "nothing changed its mode");
+    is((stat $temp)[9], $final_mtime, "nothing changes its mtime");
 }
