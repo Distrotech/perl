@@ -959,9 +959,9 @@ sub fail_with_diff ($$$$) {
     # For use below to output better messages
     my ($prop, $official, $constructed, $tested_function_name) = @_;
 
-    is($constructed, $official, "$tested_function_name('$prop')");
-    diag("Comment out lines " . (__LINE__ - 1) . " through " . (__LINE__ + 1) . " in '$0' on Un*x-like systems to see just the differences.  Uses the 'diff' first in your \$PATH");
-    return;
+    #is($constructed, $official, "$tested_function_name('$prop')");
+    #diag("Comment out lines " . (__LINE__ - 1) . " through " . (__LINE__ + 1) . " in '$0' on Un*x-like systems to see just the differences.  Uses the 'diff' first in your \$PATH");
+    #return;
 
     fail("$tested_function_name('$prop')");
 
@@ -1465,7 +1465,10 @@ foreach my $prop (sort keys %props) {
                 my ($start, $end, $value) = / ^ (.+?) \t (.*?) \t (.+?)
                                                 \s* ( \# .* )? $ /x;
                 $end = $start if $end eq "";
-                push @list, [ hex $start, hex $end, $value ];
+                push @list, [ hex $start, hex $end, hex $value ];
+                #note (__LINE__. ": " . $start . ", " . $end . ", " . $value);
+                use Data::Dumper;
+                #note (__LINE__. ": " . Dumper $list[-1]);
             }
 
             # For these mappings, the file contains all the simple mappings,
@@ -1523,12 +1526,13 @@ foreach my $prop (sort keys %props) {
             for my $element (@list) {
                 $official .= "\n" if $official;
                 if ($element->[1] == $element->[0]) {
-                    $official .= sprintf "%04X\t\t%s", $element->[0], $element->[2];
+                    $official .= sprintf "%04X\t\t%X", $element->[0], $element->[2];
                 }
                 else {
-                    $official .= sprintf "%04X\t%04X\t%s", $element->[0], $element->[1], $element->[2];
+                    $official .= sprintf "%04X\t%04X\t%X", $element->[0], $element->[1], $element->[2];
                 }
             }
+            #note (__LINE__. ": " . $official);
         }
         elsif ($full_name =~ /Simple_(Case_Folding|(Lower|Title|Upper)case_Mapping)/)
         {
@@ -1646,6 +1650,9 @@ foreach my $prop (sort keys %props) {
                     next PROPERTY;
                 }
             }
+            elsif ($full_name =~ /(Simple_)?(Case_Folding|(Lower|Title|Upper)case_Mapping)/) {
+                $invmap_ref->[$i] = sprintf("%X", $invmap_ref->[$i]);
+            }
             elsif ($format eq 'ad' || $format eq 'ale') {
 
                 # The numerics in the returned map are stored as adjusted
@@ -1760,6 +1767,8 @@ foreach my $prop (sort keys %props) {
         $/ = $input_record_separator;
 
         # And compare.
+            #note (__LINE__. ": " . $official);
+            #note (__LINE__. ": " . $tested_map);
         if ($tested_map ne $official) {
             fail_with_diff($mod_prop, $official, $tested_map, "prop_invmap");
             next PROPERTY;

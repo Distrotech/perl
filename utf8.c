@@ -3431,7 +3431,7 @@ S_swash_scan_list_line(pTHX_ U8* l, U8* const lend, UV* min, UV* max, UV* val,
 
 		/* The ToLc, etc table mappings are not in hex, and must be
 		 * corrected by adding the code point to them */
-		if (typeto) {
+		/*if (typeto) {
 		    char *after_strtol = (char *) lend;
 		    *val = Strtol((char *)l, &after_strtol, 10);
 		    l = (U8 *) after_strtol;
@@ -3447,7 +3447,7 @@ S_swash_scan_list_line(pTHX_ U8* l, U8* const lend, UV* min, UV* max, UV* val,
 			l += numlen;
 		    else
 			*val = 0;
-		}
+		/*}*/
 	    }
 	    else {
 		*val = 0;

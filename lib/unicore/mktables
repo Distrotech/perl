@@ -1320,6 +1320,7 @@ my $HEX_FORMAT = 'x';
 my $RATIONAL_FORMAT = 'r';
 my $STRING_FORMAT = 's';
 my $ADJUST_FORMAT = 'a';
+my $HEX_ADJUST_FORMAT = 'ax';
 my $DECOMP_STRING_FORMAT = 'c';
 my $STRING_WHITE_SPACE_LIST = 'sw';
 
@@ -1332,6 +1333,7 @@ my %map_table_formats = (
     $RATIONAL_FORMAT => 'rational: an integer or a fraction',
     $STRING_FORMAT => 'string',
     $ADJUST_FORMAT => 'some entries need adjustment',
+    $HEX_ADJUST_FORMAT => 'values in hex; some entries need adjustment',
     $DECOMP_STRING_FORMAT => 'Perl\'s internal (Normalize.pm) decomposition mapping',
     $STRING_WHITE_SPACE_LIST => 'string, but some elements are interpreted as a list; white space occurs only as list item separators'
 );
@@ -5565,6 +5567,7 @@ END
             my $range_size_1 = $range_size_1{$addr};
             my $format;            # Used only in $annotate option
             my $include_name;      # Used only in $annotate option
+            my $property = $self->property;
 
             if ($annotate) {
 
@@ -5577,7 +5580,6 @@ END
 
                 # The name of the character is output only for tables that
                 # don't already include the name in the output.
-                my $property = $self->property;
                 $include_name =
                     !  ($property == $perl_charname
                         || $property == main::property_ref('Unicode_1_Name')
@@ -5600,6 +5602,15 @@ END
             my $next_end;
             my $next_value;
             my $offset = 0;
+
+            my $output_value_in_hex = $self->isa('Map_Table')
+                                      && $self->format eq $HEX_ADJUST_FORMAT
+                                      && $property->full_name !~ / ^ Legacy /x;
+
+            local $to_trace = 0 if main::DEBUG;
+            trace $property->full_name, $output_value_in_hex, $property, $self, $property->directory; 
+            trace $property->full_name, $self->default_map if $property == $self;
+            local $to_trace = 0 if main::DEBUG;
 
             # Output each range as part of the here document.
             RANGE:
@@ -5678,7 +5689,14 @@ END
                     # output
                     if ($start != $end && ! $range_size_1) {
                         push @OUT, sprintf "%04X\t%04X", $start, $end;
-                        $OUT[-1] .= "\t$value" if $value ne "";
+                        if ($value ne "") {
+                            if ($output_value_in_hex) {
+                                $OUT[-1] .= sprintf "\t%X", $value;
+                            }
+                            else {
+                                $OUT[-1] .= "\t$value";
+                            }
+                        }
 
                         # Add a comment with the size of the range, if
                         # requested.  Expand Tabs to make sure they all start
@@ -5715,7 +5733,12 @@ END
 
                             # Here, caller is ok with default output.
                             for (my $i = $start; $i <= $end; $i++) {
-                                push @OUT, sprintf "%04X\t\t%s\n", $i, $value;
+                                if ($output_value_in_hex) {
+                                    push @OUT, sprintf "%04X\t\t%X\n", $i, $value;
+                                }
+                                else {
+                                    push @OUT, sprintf "%04X\t\t%s\n", $i, $value;
+                                }
                             }
                         }
                     }
@@ -6890,11 +6913,18 @@ END
         }
 
         # If the output is to be adjusted, the format of the table that gets
-        # output is actually 'a' instead of whatever it is stored internally
-        # as.
+        # output is actually 'a' or 'ax' instead of whatever it is stored
+        # internally as.
         my $output_adjusted = ($self->to_output_map == $OUTPUT_ADJUSTED);
         if ($output_adjusted) {
-            $format = $ADJUST_FORMAT;
+                local $to_trace = 1 if main::DEBUG;
+            trace $self, $default_map;
+            if ($default_map eq $CODE_POINT) {
+                $format = $HEX_ADJUST_FORMAT;
+            }
+            else {
+                $format = $ADJUST_FORMAT;
+            }
         }
 
         $self->_set_format($format);
