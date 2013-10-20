@@ -3896,6 +3896,7 @@ ext/XS-APItest/t/svpeek.t	XS::APItest extension
 ext/XS-APItest/t/svpv_magic.t	Test behaviour of SvPVbyte/utf8 & get magic
 ext/XS-APItest/t/svpv.t		More generic SvPVbyte and SvPVutf8 tests
 ext/XS-APItest/t/svsetsv.t	Test behaviour of sv_setsv with/without PERL_CORE
+ext/XS-APItest/t/svtrim.t	Test behaviour of sv_ltrim and sv_rtrim
 ext/XS-APItest/t/swaplabel.t	test recursive descent label parsing
 ext/XS-APItest/t/swaptwostmts.t	test recursive descent statement parsing
 ext/XS-APItest/t/sym-hook.t	Test rv2cv hooks for bareword lookup

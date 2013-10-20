@@ -1128,6 +1128,16 @@ my_ck_rv2cv(pTHX_ OP *o)
 
 MODULE = XS::APItest		PACKAGE = XS::APItest
 
+void
+sv_rtrim(SV *sv)
+    CODE:
+        Perl_sv_rtrim(aTHX_ sv);
+
+void
+sv_ltrim(SV *sv)
+    CODE:
+        Perl_sv_ltrim(aTHX_ sv);
+
 INCLUDE: const-xs.inc
 
 INCLUDE: numeric.xs
