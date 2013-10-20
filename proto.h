@@ -4170,6 +4170,11 @@ PERL_CALLCONV STRLEN	Perl_sv_len_utf8_nomg(pTHX_ SV *const sv)
 #define PERL_ARGS_ASSERT_SV_LEN_UTF8_NOMG	\
 	assert(sv)
 
+PERL_CALLCONV void	Perl_sv_ltrim(pTHX_ SV *const sv)
+			__attribute__nonnull__(pTHX_1);
+#define PERL_ARGS_ASSERT_SV_LTRIM	\
+	assert(sv)
+
 PERL_CALLCONV void	Perl_sv_magic(pTHX_ SV *const sv, SV *const obj, const int how, const char *const name, const I32 namlen)
 			__attribute__nonnull__(pTHX_1);
 #define PERL_ARGS_ASSERT_SV_MAGIC	\
@@ -4316,6 +4321,11 @@ PERL_CALLCONV void	Perl_sv_reset(pTHX_ const char* s, HV *const stash)
 	assert(s)
 
 PERL_CALLCONV void	Perl_sv_resetpvn(pTHX_ const char* s, STRLEN len, HV *const stash);
+PERL_CALLCONV void	Perl_sv_rtrim(pTHX_ SV *const sv)
+			__attribute__nonnull__(pTHX_1);
+#define PERL_ARGS_ASSERT_SV_RTRIM	\
+	assert(sv)
+
 PERL_CALLCONV SV*	Perl_sv_rvweaken(pTHX_ SV *const sv)
 			__attribute__nonnull__(pTHX_1);
 #define PERL_ARGS_ASSERT_SV_RVWEAKEN	\

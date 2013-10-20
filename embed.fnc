@@ -1368,6 +1368,7 @@ Apd	|int	|sv_isobject	|NULLOK SV* sv
 Apd	|STRLEN	|sv_len		|NULLOK SV *const sv
 Apd	|STRLEN	|sv_len_utf8	|NULLOK SV *const sv
 p	|STRLEN	|sv_len_utf8_nomg|NN SV *const sv
+Apd	|void	|sv_ltrim	|NN SV *const sv
 Apd	|void	|sv_magic	|NN SV *const sv|NULLOK SV *const obj|const int how \
 				|NULLOK const char *const name|const I32 namlen
 Apd	|MAGIC *|sv_magicext	|NN SV *const sv|NULLOK SV *const obj|const int how \
@@ -1399,6 +1400,7 @@ Apd	|void	|sv_report_used
 Apd	|void	|sv_reset	|NN const char* s|NULLOK HV *const stash
 p	|void	|sv_resetpvn	|NULLOK const char* s|STRLEN len \
 				|NULLOK HV *const stash
+Apd	|void	|sv_rtrim	|NN SV *const sv
 Afpd	|void	|sv_setpvf	|NN SV *const sv|NN const char *const pat|...
 Apd	|void	|sv_vsetpvf	|NN SV *const sv|NN const char *const pat|NULLOK va_list *const args
 Apd	|void	|sv_setiv	|NN SV *const sv|const IV num

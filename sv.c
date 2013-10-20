@@ -14786,6 +14786,189 @@ Perl_report_uninit(pTHX_ const SV *uninit_sv)
 		    "", "", "");
 }
 
+typedef U16 Edge;
+
+/* EDGE(c, n, e): create a trie edge whose label is the octet denoted by c,
+ * pointing to the edge with index n; the edge ends a node iff e is true.
+ *
+ * The 0x8000 bit represents the "ends node" flag; choosing that specific
+ * bit means that the compiler can use a "branch on negative" instruction to
+ * translate EDGE_ENDS_NODE() invocations. */
+#define EDGE(c, n, e) ((Edge) ((n & 0x3Fu) << 8) | (c) | ((e) ? 0x8000u : 0))
+
+#define EDGE_LABEL(e)      ((U8)((e) & 0xFF))
+#define EDGE_TARGET(e)     ((U8)(((e) & 0x3F00u) >> 8))
+#define EDGE_ENDS_NODE(e)  ((Edge) ((e) & 0x8000u))
+
+#include "trie.h"
+
+STATIC const U8 *
+S_first_not_in(const Edge *table, const U8 *p, size_t n)
+{
+    const U8 *end = p + n;
+    const U8 *first = p;
+    U8 curr = 0;
+
+    while (p < end) {
+        U8 b = *p++;
+        /* Loop till we find a matching edge in this trie node (or till we
+         * know we won't find one) */
+        for (;;) {
+            Edge edge = table[curr];
+            U8 label = EDGE_LABEL(edge);
+            if (b == label) {
+                curr = EDGE_TARGET(edge);
+                if (curr == 0)  /* root node? */
+                    first = p;
+                /* Move to the next input char. If we're already at the far
+                 * edge of the buffer, the outer loop will detect that. */
+                break;
+            }
+            else if (b < label || EDGE_ENDS_NODE(edge))
+                /* No other candidate edges available */
+                return first;
+            else
+                /* Consider the next edge in the current node */
+                curr++;
+        }
+    }
+
+    return first;
+}
+
+/* The table here must be generated using the reversed bytes of the UTF-8
+ * representation of the relevant characters. */
+STATIC const U8 *
+S_last_not_in(const Edge *table, const U8 *buf, size_t n)
+{
+    const U8 *p = buf + n;
+    const U8 *last = p;    /* immediately beyond the last non-table char */
+    U8 curr = 0;           /* root node */
+
+    while (p > buf) {
+        U8 b = *--p;
+        /* Loop till we find a matching edge in this trie node (or till we
+         * know we won't find one) */
+        for (;;) {
+            Edge edge = table[curr];
+            U8 label = EDGE_LABEL(edge);
+            if (b == label) {
+                curr = EDGE_TARGET(edge);
+                if (curr == 0)  /* root node? */
+                    last = p;
+                /* Move to the next input char.  If we're already at the far
+                 * edge of the buffer, the outer loop will detect that. */
+                break;
+            }
+            else if (b < label || EDGE_ENDS_NODE(edge))
+                /* No other candidate edges available */
+                return last;
+            else
+                /* Consider the next edge in the current node */
+                curr++;
+        }
+    }
+
+    return last;
+}
+
+/*
+=for apidoc sv_ltrim
+
+Adjust sv so that it no longer starts with any Unicode whitespace characters.
+
+=cut
+*/
+
+void
+Perl_sv_ltrim(pTHX_ SV *const sv)
+{
+    STRLEN len;
+    char *s;
+
+    PERL_ARGS_ASSERT_SV_LTRIM;
+
+    SvGETMAGIC(sv);
+
+    if (SvTHINKFIRST(sv))
+        sv_force_normal_flags(sv, 0);
+
+    s = SvPV(sv, len);
+
+    if (len && !SvPOK(sv))
+        s = SvPV_force_nomg(sv, len);
+
+    if (!s || !len)
+        return;
+
+    if (SvUTF8(sv)) {
+        const U8 *const buf = (const U8 *const) s;
+        const U8 *const first = S_first_not_in(forward_whitespace, buf, len);
+        sv_chop(sv, (char *) first);
+    }
+    else {
+        char *p = s, *end = s + len;
+        while (p < end) {
+            if (!isSPACE_L1(*p))
+                break;
+            p++;
+        }
+        sv_chop(sv, p);
+    }
+
+    SvSETMAGIC(sv);
+}
+
+/*
+=for apidoc sv_rtrim
+
+Adjust sv so that it no longer ends with any Unicode whitespace characters.
+
+=cut
+*/
+
+void
+Perl_sv_rtrim(pTHX_ SV *const sv)
+{
+    STRLEN len;
+    char *s;
+
+    PERL_ARGS_ASSERT_SV_RTRIM;
+
+    SvGETMAGIC(sv);
+
+    if (SvTHINKFIRST(sv))
+        sv_force_normal_flags(sv, 0);
+
+    s = SvPV(sv, len);
+
+    if (len && !SvPOK(sv))
+        s = SvPV_force_nomg(sv, len);
+
+    if (!s || !len)
+        return;
+
+    if (SvUTF8(sv)) {
+        const U8 *const buf = (const U8 *const) s;
+        const U8 *const last = S_last_not_in(reverse_whitespace, buf, len);
+        STRLEN suffix_len = last - buf;
+        SvCUR_set(sv, suffix_len);
+        s[suffix_len] = '\0';
+    }
+    else {
+        char *p = s + len;
+        while (p > s) {
+            if (!isSPACE_L1(p[-1]))
+                break;
+            p--;
+        }
+        SvCUR_set(sv, p - s);
+        *p = '\0';
+    }
+
+    SvSETMAGIC(sv);
+}
+
 /*
  * Local variables:
  * c-indentation-style: bsd
