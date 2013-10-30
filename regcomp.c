@@ -10284,11 +10284,9 @@ S_grok_bslash_N(pTHX_ RExC_state_t *pRExC_state, regnode** node_p, UV *valuep, I
             }
             return FALSE;
         }
-	nextchar(pRExC_state);
 	*node_p = reg_node(pRExC_state, REG_ANY);
 	*flagp |= HASWIDTH|SIMPLE;
 	RExC_naughty++;
-	RExC_parse--;
         Set_Node_Length(*node_p, 1); /* MJD */
 	return TRUE;
     }
