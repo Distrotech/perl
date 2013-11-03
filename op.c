@@ -8691,7 +8691,8 @@ Perl_ck_exit(pTHX_ OP *o)
     PERL_ARGS_ASSERT_CK_EXIT;
 
 #ifdef VMS
-    HV * const table = GvHV(PL_hintgv);
+    HV * const table =
+	PL_hints & HINT_LOCALIZE_HH ? GvHV(PL_hintgv) : NULL;
     if (table) {
        SV * const * const svp = hv_fetchs(table, "vmsish_exit", FALSE);
        if (svp && *svp && SvTRUE(*svp))
