@@ -184,13 +184,13 @@ sub Init {
     # -------- Configuration ---------
 
     # perlbug address
-    $bugaddress = 'perlbug@perl.org';
+    $bugaddress = 'myself@localhost';
 
     # Test address
-    $testaddress = 'perlbug-test@perl.org';
+    $testaddress = 'myself@localhost';
 
     # Thanks address
-    $thanksaddress = 'perl-thanks@perl.org';
+    $thanksaddress = 'myself@localhost';
 
     if (basename ($0) =~ /^perlthanks/i) {
 	# invoked as perlthanks
