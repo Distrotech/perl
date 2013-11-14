@@ -4351,12 +4351,17 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
 	     )
             &&
             !(isSwipe =
+                 (              /* Either ... */
 #ifdef PERL_NEW_COPY_ON_WRITE
 				/* slated for free anyway (and not COW)? */
-                 (sflags & (SVs_TEMP|SVf_IsCOW)) == SVs_TEMP &&
+                    (sflags & (SVs_TEMP|SVf_IsCOW)) == SVs_TEMP
 #else
-                 (sflags & SVs_TEMP) &&   /* slated for free anyway? */
+                    (sflags & SVs_TEMP)   /* slated for free anyway? */
 #endif
+                                /* or a swipable TARG */
+                 || (sflags & (SVs_PADTMP|SVf_READONLY|SVf_IsCOW))
+                       == SVs_PADTMP
+                 ) &&
                  !(sflags & SVf_OOK) &&   /* and not involved in OOK hack? */
 	         (!(flags & SV_NOSTEAL)) &&
 					/* and we're allowed to steal temps */
@@ -14071,13 +14076,18 @@ Perl_sv_recode_to_utf8(pTHX_ SV *sv, SV *encoding)
 	STRLEN len;
 	const char *s;
 	dSP;
+	SV *nsv = sv;
 	ENTER;
 	SAVETMPS;
+	if (SvPADTMP(nsv)) {
+	    nsv = sv_newmortal();
+	    SvSetSV_nosteal(nsv, sv);
+	}
 	save_re_context();
 	PUSHMARK(sp);
 	EXTEND(SP, 3);
 	PUSHs(encoding);
-	PUSHs(sv);
+	PUSHs(nsv);
 /*
   NI-S 2002/07/09
   Passing sv_yes is wrong - it needs to be or'ed set of constants

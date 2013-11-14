@@ -3807,6 +3807,7 @@ PP(pp_require)
 	if (vms_unixname)
 #endif
 	{
+	    SV *nsv = sv;
 	    namesv = newSV_type(SVt_PV);
 	    for (i = 0; i <= AvFILL(ar); i++) {
 		SV * const dirsv = *av_fetch(ar, i, TRUE);
@@ -3831,11 +3832,15 @@ PP(pp_require)
 
 		    ENTER_with_name("call_INC");
 		    SAVETMPS;
+		    if (SvPADTMP(nsv)) {
+			nsv = sv_newmortal();
+			SvSetSV_nosteal(nsv,sv);
+		    }
 		    EXTEND(SP, 2);
 
 		    PUSHMARK(SP);
 		    PUSHs(dirsv);
-		    PUSHs(sv);
+		    PUSHs(nsv);
 		    PUTBACK;
 		    if (sv_isobject(loader))
 			count = call_method("INC", G_ARRAY);
