@@ -63,6 +63,7 @@ use Config;
 use File::Spec;		# keep perlbug Perl 5.005 compatible
 use Getopt::Std;
 use File::Basename 'basename';
+use open IN => ':locale', OUT => ':raw';
 
 sub paraprint;
 
@@ -1049,7 +1050,7 @@ Content-Disposition: attachment; filename="$attach_file"
 
 ATTACHMENT
 
-        open my $attach_fh, '<', $attachment
+        open my $attach_fh, '<:raw', $attachment
             or die "Couldn't open attachment '$attachment': $!\n";
         while (<$attach_fh>) { $attach .= $_; }
         close($attach_fh) or die "Error closing attachment '$attachment': $!";
