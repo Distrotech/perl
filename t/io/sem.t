@@ -27,7 +27,7 @@ my $nsem = 10;
 END { semctl $id, IPC_RMID, 0, 0 if defined $id }
 
 {
-    local $SIG{SYS} = sub { plan(skip_all => "SIGSYS caught") } if exists $SIG{SYS};
+    local $SIG{SYS} = sub { skip_all("SIGSYS caught") } if exists $SIG{SYS};
     $id = semget IPC_PRIVATE, $nsem, S_IRUSR | S_IWUSR | IPC_CREAT;
 }
 
