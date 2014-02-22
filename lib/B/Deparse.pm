@@ -20,7 +20,7 @@ use B qw(class main_root main_start main_cv svref_2object opnumber perlstring
          CVf_METHOD CVf_LVALUE
 	 PMf_KEEP PMf_GLOBAL PMf_CONTINUE PMf_EVAL PMf_ONCE
 	 PMf_MULTILINE PMf_SINGLELINE PMf_FOLD PMf_EXTENDED);
-$VERSION = '1.25';
+$VERSION = '1.26';
 use strict;
 use vars qw/$AUTOLOAD/;
 use warnings ();
@@ -3212,13 +3212,23 @@ sub pp_leavetry {
     return "eval {\n\t" . $self->pp_leave(@_) . "\n\b}";
 }
 
+sub _op_is_or_was {
+  my ($op, $expect_type) = @_;
+  my $type = $op->type;
+  return($type == $expect_type
+         || ($type == OP_NULL && $op->targ == $expect_type));
+}
+
 sub pp_null {
     my $self = shift;
     my($op, $cx) = @_;
     if (class($op) eq "OP") {
 	# old value is lost
 	return $self->{'ex_const'} if $op->targ == OP_CONST;
-    } elsif ($op->first->name eq "pushmark") {
+    } elsif ($op->first->name eq 'pushmark'
+             or $op->first->name eq 'null'
+                && $op->first->targ == OP_PUSHMARK
+                && _op_is_or_was($op, OP_LIST)) {
 	return $self->pp_list($op, $cx);
     } elsif ($op->first->name eq "enter") {
 	return $self->pp_leave($op, $cx);
