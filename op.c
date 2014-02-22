@@ -1953,10 +1953,13 @@ S_finalize_op(pTHX_ OP* o)
 	S_scalar_slice_warning(aTHX_ o);
 
     case OP_KVHSLICE:
+        kid = cLISTOPo->op_first->op_sibling;
 	if (/* I bet there's always a pushmark... */
-	        (kid = cLISTOPo->op_first->op_sibling)->op_type != OP_LIST
-	      && kid->op_type != OP_CONST)
+	    OP_TYPE_ISNT_AND_WASNT_NN(kid, OP_LIST)
+	    && OP_TYPE_ISNT_NN(kid, OP_CONST))
+        {
 	    break;
+        }
 
 	key_op = (SVOP*)(kid->op_type == OP_CONST
 				? kid
@@ -9661,7 +9664,7 @@ Perl_ck_sassign(pTHX_ OP *o)
 	/* For state variable assignment, kkid is a list op whose op_last
 	   is a padsv. */
 	if ((kkid->op_type == OP_PADSV ||
-	     (kkid->op_type == OP_LIST &&
+	     (OP_TYPE_IS_OR_WAS(kkid, OP_LIST) &&
 	      (kkid = cLISTOPx(kkid)->op_last)->op_type == OP_PADSV
 	     )
 	    )
@@ -11144,6 +11147,30 @@ S_inplace_aassign(pTHX_ OP *o) {
 #define IS_AND_OP(o)   (o->op_type == OP_AND)
 #define IS_OR_OP(o)    (o->op_type == OP_OR)
 
+STATIC void
+S_maybe_null_listop_in_list_context(pTHX_ OP *o)
+{
+    PERL_ARGS_ASSERT_MAYBE_NULL_LISTOP_IN_LIST_CONTEXT;
+
+    /* If this is an OP_LIST in list context, we can ditch the OP_LIST
+     * and the OP_PUSHMARK within. */
+    if (o->op_flags & OPf_KIDS
+        && ((o->op_flags & OPf_WANT) == OPf_WANT_LIST)
+        && OP_TYPE_IS(cUNOPo->op_first, OP_PUSHMARK))
+    {
+        OP *kid = cLISTOPo->op_first;
+        /* Find the end of the chain of OPs executed within the OP_LIST. */
+        while (kid->op_next != o) {
+            assert(kid);
+            kid = kid->op_next;
+        }
+
+        kid->op_next = o->op_next; /* patch list out of exec chain */
+        op_null(cUNOPo->op_first); /* NULL the pushmark */
+        op_null(o); /* NULL the list */
+    }
+}
+
 /* A peephole optimizer.  We visit the ops in the order they're to execute.
  * See the comments at the top of this file for more details about when
  * peep() is called */
@@ -11176,10 +11203,48 @@ Perl_rpeep(pTHX_ OP *o)
 	   clear this again.  */
 	o->op_opt = 1;
 	PL_op = o;
+
+
+        /* The following will have the OP_LIST and OP_PUSHMARK
+         * patched out later IF the OP_LIST is in list context.
+         * So in that case, we can set the this OP's op_next
+         * to skip to after the OP_PUSHMARK:
+         *   a THIS -> b
+         *   d list -> e
+         *   b   pushmark -> c
+         *   c   whatever -> d
+         *   e whatever
+         * will eventually become:
+         *   a THIS -> c
+         *   - ex-list -> -
+         *   -   ex-pushmark -> -
+         *   c   whatever -> e
+         *   e whatever
+         *
+         * See also S_maybe_null_listop_in_list_context().
+         */
+        {
+            OP *sibling;
+            OP *other_pushmark;
+            if (OP_TYPE_IS(o->op_next, OP_PUSHMARK)
+                && (sibling = o->op_sibling)
+                && sibling->op_type == OP_LIST
+                && (sibling->op_flags & OPf_WANT) == OPf_WANT_LIST
+                && (other_pushmark = cLISTOPx(sibling)->op_first)
+                && OP_TYPE_IS_NN(other_pushmark, OP_PUSHMARK)
+                && other_pushmark == o->op_next)
+            {
+                o->op_next = other_pushmark->op_next;
+            }
+        }
+
 	switch (o->op_type) {
 	case OP_DBSTATE:
 	    PL_curcop = ((COP*)o);		/* for warnings */
 	    break;
+        case OP_LIST:
+            maybe_null_listop_in_list_context(o);
+            break;
 	case OP_NEXTSTATE:
 	    PL_curcop = ((COP*)o);		/* for warnings */
 

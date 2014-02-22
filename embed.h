@@ -1470,6 +1470,7 @@
 #define is_list_assignment(a)	S_is_list_assignment(aTHX_ a)
 #define listkids(a)		S_listkids(aTHX_ a)
 #define looks_like_bool(a)	S_looks_like_bool(aTHX_ a)
+#define maybe_null_listop_in_list_context(a)	S_maybe_null_listop_in_list_context(aTHX_ a)
 #define modkids(a,b)		S_modkids(aTHX_ a,b)
 #define move_proto_attr(a,b,c)	S_move_proto_attr(aTHX_ a,b,c)
 #define my_kid(a,b,c)		S_my_kid(aTHX_ a,b,c)

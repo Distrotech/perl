@@ -6084,6 +6084,11 @@ STATIC bool	S_looks_like_bool(pTHX_ const OP* o)
 #define PERL_ARGS_ASSERT_LOOKS_LIKE_BOOL	\
 	assert(o)
 
+STATIC void	S_maybe_null_listop_in_list_context(pTHX_ OP* o)
+			__attribute__nonnull__(pTHX_1);
+#define PERL_ARGS_ASSERT_MAYBE_NULL_LISTOP_IN_LIST_CONTEXT	\
+	assert(o)
+
 STATIC OP*	S_modkids(pTHX_ OP *o, I32 type);
 STATIC void	S_move_proto_attr(pTHX_ OP **proto, OP **attrs, const GV *name)
 			__attribute__nonnull__(pTHX_1)
