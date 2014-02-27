@@ -446,7 +446,42 @@ EOM
 		my $ftime = time - 4;
 		utime $ftime, $ftime, 'Makefile.PL';
 	    };
+        } elsif ($mname =~ /\A(?:Carp
+                            |ExtUtils::CBuilder
+                            |Safe
+                            |Search::Dict)\z/x) {
+            # An explicit list of dual-life extensions that have a Makefile.PL
+            # for CPAN, but we have verified can also be built using the fakery.
+            my ($problem) = just_pm_to_blib($target, $mname);
+            # We really need to sanity test that we can fake it. This intent is
+            # that this should only fail because you've just added a file to the
+            # dual-life dist that we can't handle. In which case you should
+            # remove the dist from the regex above.
+            if (defined $problem) {
+                # Get the list of files that git isn't ignoring:
+                my @files = `git ls-files --cached --others --exclude-standard 2>/dev/null`;
+                # on error (eg no git) we get nothing, but that's not a problem.
+                # the goal is to see if git thinks that the problem file is
+                # interesting, by getting a positive match with something git 
+                # told us about, and if so bail out:
+                foreach (@files) {
+                    chomp;
+                    die "FATAL - $0 has $mname in the list of simple extensions, but it now contains file '$problem' which we can't handle"
+                        if $problem eq $_;
+                }
+                # There's an unexpected file, but it seems to be something that
+                # git will ignore. So fall through to the regular Makefile.PL
+                # handling code below, on the assumption that we won't get here
+                # for a clean build.
+                warn "WARNING - $0 is building $mname using EU::MM, as it found file '$problem'";
+            } else {
+                # It faked everything for us.
+                chdir $return_dir || die "Cannot cd to $return_dir: $!";
+                return;
+            }
 	}
+
+        # We are going to have to use Makefile.PL:
 	print "\nRunning Makefile.PL in $ext_dir\n";
 
 	my @args = ("-I$lib_dir", 'Makefile.PL');
