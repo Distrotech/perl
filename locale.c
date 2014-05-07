@@ -1086,6 +1086,7 @@ S_is_cur_LC_category_utf8(pTHX_ int category)
                 Safefree(save_input_locale);
                 return is_utf8;
             }
+            Safefree(codeset);
         }
 
 #   endif
