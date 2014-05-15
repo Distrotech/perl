@@ -903,6 +903,10 @@ localeconv()
 	struct lconv *lcbuf;
 	RETVAL = newHV();
 	sv_2mortal((SV*)RETVAL);
+
+        /* localeconv() deals with both LC_NUMERIC and LC_MONETARY, but
+         * LC_MONETARY is already in the correct locale */
+        STORE_NUMERIC_STANDARD_FORCE_LOCAL();
 	if ((lcbuf = localeconv())) {
 	    const struct lconv_offset *strings = lconv_strings;
 	    const struct lconv_offset *integers = lconv_integers;
@@ -924,6 +928,7 @@ localeconv()
 				    strlen(integers->name), newSViv(value), 0);
 	    } while ((++integers)->name);
 	}
+        RESTORE_NUMERIC_STANDARD();
 #else
 	localeconv(); /* A stub to call not_here(). */
 #endif
