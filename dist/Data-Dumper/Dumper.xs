@@ -641,6 +641,7 @@ DD_dump(pTHX_ SV *val, const char *name, STRLEN namelen, SV *retval, HV *seenhv,
 	    else {
 	      sv_pattern = val;
 	    }
+	    assert(sv_pattern);
 	    rval = SvPV(sv_pattern, rlen);
 	    rend = rval+rlen;
 	    slash = rval;
