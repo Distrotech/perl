@@ -2246,6 +2246,12 @@ enabled psuedo-fork in your build of Win32 Perl, and were running that build on
 Server 2003 R2 or newer OS.  The leak does not appear on WinXP SP3.
 [L<perl #121676|https://rt.perl.org/Public/Bug/Display.html?id=121676>]
 
+=item *
+
+A small previously intentional memory leak in PERL_SYS_INIT/PERL_SYS_INIT3 on
+Win32 builds was fixed. This might affect embedders who repeatedly create and
+destroy perl engines within the same process.
+
 =back
 
 =item WinCE
