@@ -72,11 +72,11 @@ PerlIOVia_method(pTHX_ PerlIO * f, const char *method, CV ** save, int flags,
     CV *cv =
 	(*save) ? *save : PerlIOVia_fetchmethod(aTHX_ s, method, save);
     if (cv != (CV *) - 1) {
-        va_list ap;
-        va_start(ap, flags);
 	IV count;
 	dSP;
 	SV *arg;
+        va_list ap;
+        va_start(ap, flags);
 	PUSHSTACKi(PERLSI_MAGIC);
 	ENTER;
 	PUSHMARK(sp);
