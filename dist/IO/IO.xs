@@ -157,6 +157,16 @@ io_blocking(pTHX_ InputStream f, int block)
     return RETVAL;
 #else
 #   ifdef WIN32
+    int fd;
+    if (!f) {
+	errno = EBADF;
+	return -1;
+    }
+    fd = PerlIO_fileno(f);
+    if (fd < 0) {
+      errno = EBADF;
+      return -1;
+    }
     if (block >= 0) {
 	unsigned long flags = !block;
 	/* ioctl claims to take char* but really needs a u_long sized buffer */
