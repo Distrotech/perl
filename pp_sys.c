@@ -1784,7 +1784,7 @@ PP(pp_sysread)
                 SETERRNO(EBADF,SS_IVCHAN);
                 count = -1;
             } else
-                count = PerlSock_recv(fd, length, 0);
+                count = PerlSock_recv(fd, buffer, length, 0);
 	}
 	else
 #endif
