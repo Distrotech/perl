@@ -3808,6 +3808,11 @@
  */
 /*#define	HAS_OFF64_T    		/ **/
 
+/* HAS_PTRDIFF_T:
+ *	This symbol will be defined if the C compiler supports ptrdiff_t.
+ */
+#define	HAS_PTRDIFF_T    		/**/
+
 /* HAS_PRCTL:
  *	This symbol, if defined, indicates that the prctl routine is
  *	available to set process title.
@@ -4718,6 +4723,6 @@
 #endif
 
 /* Generated from:
- * 7557e985de18f71e80f627226b454bc8eaf20477dcf0c45b5b2c51ec792f5c89 config_h.SH
- * a61a38253be27e9d2b4ff63b9f34ef9c6870a03037609f2c89840ad890a7aef8 uconfig.sh
+ * 58d64ef9891ce2537a07be8170118662bf10415e8fb1169427ddefa59c914263 config_h.SH
+ * dfa28ffc180f8203b337d63589e3f152187c8fbd80cf6b74239400cb74162b53 uconfig.sh
  * ex: set ro: */
