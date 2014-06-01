@@ -180,6 +180,13 @@ Perl_new_numeric(pTHX_ const char *newnum)
     PL_numeric_standard = ((*save_newnum == 'C' && save_newnum[1] == '\0')
                             || strEQ(save_newnum, "POSIX"));
     PL_numeric_local = TRUE;
+
+    /* Keep LC_NUMERIC in the C locale.  This is for XS modules, so they don't
+     * have to worry about the radix being a non-dot.  (Core operations that
+     * need the underlying locale change to it temporarily).  An explicit call
+     * from C code to setlocale() still will cause XS module failures. */
+    set_numeric_standard();
+
     set_numeric_radix();
 
 #endif /* USE_LOCALE_NUMERIC */

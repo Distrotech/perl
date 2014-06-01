@@ -4796,3 +4796,16 @@ test_toTITLE_utf8(SV * p)
         RETVAL = av;
     OUTPUT:
         RETVAL
+
+SV *
+test_Gconvert(SV * number, SV * num_digits)
+    PREINIT:
+        SV* buffer_sv = newSV(100);
+        char *buffer = SvPVX(buffer_sv);
+    CODE:
+        RETVAL = newSVpv(Gconvert(SvNV(number), SvUV(num_digits),
+                                  0,    /* No trailing zeroes */
+                                  buffer),
+                         0);
+    OUTPUT:
+        RETVAL
