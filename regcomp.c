@@ -13212,7 +13212,7 @@ S_add_above_Latin1_folds(pTHX_ RExC_state_t *pRExC_state, const U8 cp, SV** invl
 
     PERL_ARGS_ASSERT_ADD_ABOVE_LATIN1_FOLDS;
 
-    assert(HAS_NONLATIN1_SIMPLE_FOLD_CLOSURE(cp));
+    /*assert(HAS_NONLATIN1_SIMPLE_FOLD_CLOSURE(cp));*/
 
     switch (cp) {
         case 'k':
@@ -13242,7 +13242,7 @@ S_add_above_Latin1_folds(pTHX_ RExC_state_t *pRExC_state, const U8 cp, SV** invl
         default:
             /* Use deprecated warning to increase the chances of this being
              * output */
-            ckWARN2reg_d(RExC_parse, "Perl folding rules are not up-to-date for 0x%02X; please use the perlbug utility to report;", cp);
+            /*ckWARN2reg_d(RExC_parse, "Perl folding rules are not up-to-date for 0x%02X; please use the perlbug utility to report;", cp);*/
             break;
     }
 }
