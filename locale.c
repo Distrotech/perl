@@ -1406,6 +1406,27 @@ Perl__is_in_locale_category(pTHX_ const bool compiling, const int category)
     assert(category >= -1);
     return cBOOL(SvUV(categories) & (1U << (category + 1)));
 }
+ 
+char *
+Perl_my_strerror(pTHX_ const int errnum) {
+
+#ifndef USE_LOCALE_MESSAGES
+    return Strerror(errnum);
+#else
+    if (IN_LC(LC_MESSAGES)) {
+        return Strerror(errnum);
+    }
+    else {
+        char * save_locale = setlocale(LC_MESSAGES, "C");
+        /* XXX leaks, need test for this branch */
+        char *errstr = savepv(Strerror(errnum));
+        setlocale(LC_MESSAGES, save_locale);
+        return errstr;
+    }
+
+#endif
+
+}
 
 /*
  * Local variables:
