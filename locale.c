@@ -148,9 +148,12 @@ Perl_new_numeric(pTHX_ const char *newnum)
      * This sets several interpreter-level variables:
      * PL_numeric_name  The default locale's name: a copy of 'newnum'
      * PL_numeric_local A boolean indicating if the toggled state is such
-     *                  that the current locale is the default locale
-     * PL_numeric_standard A boolean indicating if the toggled state is such
-     *                  that the current locale is the C locale
+     *                  that the current locale is the program's underlying
+     *                  locale
+     * PL_numeric_standard An int indicating if the toggled state is such
+     *                  that the current locale is the C locale.  If non-zero,
+     *                  it is in C; if > 1, it means it may not be toggled away
+     *                  from C.
      * Note that both of the last two variables can be true at the same time,
      * if the underlying locale is C.  (Toggling is a no-op under these
      * circumstances.)
@@ -224,7 +227,7 @@ Perl_set_numeric_local(pTHX)
      * already there.  Probably should use the macros like SET_NUMERIC_LOCAL()
      * in perl.h instead of calling this directly. */
 
-    if (! PL_numeric_local) {
+    if (_NOT_IN_NUMERIC_LOCAL) {
 	setlocale(LC_NUMERIC, PL_numeric_name);
 	PL_numeric_standard = FALSE;
 	PL_numeric_local = TRUE;
