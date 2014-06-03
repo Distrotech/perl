@@ -943,17 +943,8 @@
  *	This symbol holds the hexadecimal constant defined in byteorder,
  *	in a UV, i.e. 0x1234 or 0x4321 or 0x12345678, etc...
  *	If the compiler supports cross-compiling or multiple-architecture
- *	binaries (e.g. on NeXT systems), use compiler-defined macros to
+ *	binaries, use compiler-defined macros to
  *	determine the byte order.
- *	On NeXT 3.2 (and greater), you can build "Fat" Multiple Architecture
- *	Binaries (MAB) on either big endian or little endian machines.
- *	The endian-ness is available at compile-time.  This only matters
- *	for perl, where the config.h can be generated and installed on
- *	one system, and used by a different architecture to build an
- *	extension.  Older versions of NeXT that might not have
- *	defined either *_ENDIAN__ were all on Motorola 680x0 series,
- *	so the default case (for NeXT) is big endian to catch them.
- *	This might matter for NeXT 3.0.
  */
 #if defined(MULTIARCH)
 #  ifdef __LITTLE_ENDIAN__
@@ -975,12 +966,9 @@
 #      endif
 #    endif
 #  endif
-#  if !defined(BYTEORDER) && (defined(NeXT) || defined(__NeXT__))
-#    define BYTEORDER 0x4321
-#  endif
 #else
 #define BYTEORDER 0x1234	/* large digits for MSB */
-#endif /* NeXT */
+#endif
 
 /* CHARBITS:
  *	This symbol contains the size of a char, so that the C preprocessor
@@ -4711,6 +4699,6 @@
 #endif
 
 /* Generated from:
- * 0c557b295352d0f05dcf3397478783eb763c947618aef92c2a0f86ba2540da40 config_h.SH
+ * f53a365277daf254727e3ffdf8abc2d3f9a2b3d8a9170ef70207197809d399a4 config_h.SH
  * a61a38253be27e9d2b4ff63b9f34ef9c6870a03037609f2c89840ad890a7aef8 uconfig.sh
  * ex: set ro: */
