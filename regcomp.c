@@ -5133,6 +5133,7 @@ PerlIO_printf(Perl_debug_log, "LHS=%"UVuf" RHS=%"UVuf"\n",
 		    }  else {
 			/* AND before and after: combine and continue */
 			ssc_and(pRExC_state, data->start_class, (regnode_charclass *) &intrnl);
+                        ANYOF_FLAGS(data->start_class) |= ANYOF_EMPTY_STRING;
 		    }
                 }
 	    }
