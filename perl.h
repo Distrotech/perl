@@ -1880,6 +1880,7 @@ typedef NVTYPE NV;
 #       define Perl_floor floorl
 #       define Perl_ceil ceill
 #       define Perl_fmod fmodl
+#       define Perl_ldexp ldexpl
 #   endif
 /* e.g. libsunmath doesn't have modfl and frexpl as of mid-March 2000 */
 #   ifdef HAS_MODFL
@@ -1953,6 +1954,7 @@ EXTERN_C long double modfl(long double, long double *);
 #   define Perl_fmod fmod
 #   define Perl_modf(x,y) modf(x,y)
 #   define Perl_frexp(x,y) frexp(x,y)
+#   define Perl_ldexp(x,y) ldexp(x,y)
 #endif
 
 /* rumor has it that Win32 has _fpclass() */
@@ -5536,6 +5538,28 @@ typedef struct am_table_short AMTS;
 #ifndef Atoul
 #   define Atoul(s)	Strtoul(s, NULL, 10)
 #endif
+
+/* If UV can fit all the mantissa bits of NV (and assumedly the
+ * exponent and sign too), we can use the frexp+ldexp to extract
+ * the exponent and the mantissa bits.  The 53 bits is the IEEE 754.
+ *
+ * XXX what to do if this isn't true, e.g. with long double formats
+ * with more bits than UV?  Note that "long double" means many
+ * different things, in different CPUs/compilers/OSes: 80 bits,
+ * 113 bits, and so forth.
+ *
+ * Maybe those platforms have some other interfaces for getting the
+ * mantissa bits, like maybe unions overlaying doubles with bitfields?
+ * Or multiple UVs?  Or a 128-bit integer type?
+ */
+#if UVSIZE == 8 && NVSIZE == 8 && NV_PRESERVES_UV_BITS == 53
+#  define PERL_USE_HEXFP
+#endif
+/* XXX this is a little harsh - we could have a Configure scan for
+ * %a/%A support (for long doubles, so %La/%LA), and similarly for
+ * strtod/strtold (note that support for this may depend on compiler
+ * flags / frontend, both being C99 things), and then use those as a
+ * last resort (unportabilities await) */
 
 #ifndef PERL_SCRIPT_MODE
 #define PERL_SCRIPT_MODE "r"

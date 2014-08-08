@@ -10585,6 +10585,7 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
     /* large enough for "%#.#f" --chip */
     /* what about long double NVs? --jhi */
     bool no_redundant_warning = FALSE; /* did we use any explicit format parameter index? */
+    bool hexfp = FALSE;
 
     DECLARATION_FOR_STORE_LC_NUMERIC_SET_TO_NEEDED;
 
@@ -11376,6 +11377,7 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
 	case 'e': case 'E':
 	case 'f':
 	case 'g': case 'G':
+	case 'a': case 'A':
 	    if (vectorize)
 		goto unknown;
 
@@ -11428,14 +11430,33 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
 	    /* nv * 0 will be NaN for NaN, +Inf and -Inf, and 0 for anything
 	       else. frexp() has some unspecified behaviour for those three */
 	    if (c != 'e' && c != 'E' && (nv * 0) == 0) {
-		i = PERL_INT_MIN;
-		/* FIXME: if HAS_LONG_DOUBLE but not USE_LONG_DOUBLE this
-		   will cast our (long double) to (double) */
-		(void)Perl_frexp(nv, &i);
-		if (i == PERL_INT_MIN)
-		    Perl_die(aTHX_ "panic: frexp");
-		if (i > 0)
-		    need = BIT_DIGITS(i);
+                i = PERL_INT_MIN;
+                /* FIXME: if HAS_LONG_DOUBLE but not USE_LONG_DOUBLE this
+                   will cast our (long double) to (double) */
+                (void)Perl_frexp(nv, &i);
+                if (i == PERL_INT_MIN)
+                    Perl_die(aTHX_ "panic: frexp");
+                hexfp = (c == 'a' || c == 'A');
+                if (UNLIKELY(hexfp)) {
+                    /* Hexadecimal floating point: this size
+                     * computation probably overshoots, but that is
+                     * better than undershooting. */
+                    need +=
+                        (nv < 0) + /* possible unary minus */
+                        2 + /* "0x" */
+                        2 + /* "1." */
+                        /* We want one byte per each 4 bits in the
+                         * mantissa.  This works out to about 0.83
+                         * bytes per NV decimal digit (of 4 bits):
+                         * (NV_DIG * log(10)/log(2)) / 4,
+                         * we overestimate by using 5/6 (0.8333...) */
+                        ((NV_DIG * 5) / 6 + 1) +
+                        2 + /* "p+" */
+                        (i >= 0 ? BIT_DIGITS(i) : 1 + BIT_DIGITS(-i)) +
+                        1;   /* \0 */
+                } else if (i > 0) {
+                    need = BIT_DIGITS(i);
+                } /* if i < 0, the number of digits is hard to predict. */
 	    }
 	    need += has_precis ? precis : 6; /* known default */
 
@@ -11533,6 +11554,130 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
 			break;
 		}
 	    }
+            if (UNLIKELY(hexfp)) {
+                /* Hexadecimal floating point. */
+#ifdef PERL_USE_HEXFP
+                /* If UV can fit all the mantissa bits of NV (and
+                 * assumedly the exponent and sign too), we can use
+                 * the frexp+ldexp to extract the exponent and the
+                 * mantissa bits.
+                 *
+                 * NOTE: do not test for the NV_PRESERVES_UV or
+                 * NV_PRESERVES_UV_BITS here, we would need the
+                 * other way around.
+                 *
+                 * XXX what to do if this isn't true, e.g. with
+                 * long double formats with more bits than UV?
+                 * (note that "long double" means many different things)
+                 * Maybe those platforms have some other interfaces
+                 * for getting the mantissa bits, like maybe unions
+                 * overlaying doubles with bitfields?  Or multiple UVs?
+                 * Or a 128-bit integer type?
+                 */
+                int exponent;
+                NV m = Perl_frexp(nv > 0 ? nv : -nv, &exponent);
+                UV mantissa = Perl_ldexp(m, NV_MANT_DIG);
+                int zerotail = 0;
+                if (mantissa == 0) {
+                    elen = my_snprintf(PL_efloatbuf, PL_efloatsize,
+                                       c == 'a' ? "0x0p+0" : "0X0P+0");
+                } else {
+                    bool lower = c == 'a';
+                    const char* xdig = PL_hexdigit;
+                    char* p = PL_efloatbuf;
+                    int hi_ix =
+                        (NV_MANT_DIG & 3) ?
+                        (NV_MANT_DIG / 4): (NV_MANT_DIG / 4 - 1);
+                    int lo_ix = 0;
+                    int ix;
+                    U8 hi_nibble;
+                    STRLEN shift;
+
+                    assert(hi_ix < UVSIZE * 2);
+                    assert(lo_ix <= hi_ix);
+                    if (nv < 0)
+                        *p++ = '-';
+                    else if (plus)
+                        *p++ = plus;
+                    *p++ = '0';
+                    if (lower) {
+                        *p++ = 'x';
+                    }
+                    else {
+                        *p++ = 'X';
+                        xdig += 16; /* use uppercase hex */
+                    }
+
+                    if (precis > 0) {
+                        UV after_precis;
+                        if (hi_ix > (int)precis) {
+                            lo_ix = hi_ix - precis;
+                            after_precis =
+                                mantissa << ((UVSIZE * 2 - ((lo_ix - 1) << 2)));
+                            shift = lo_ix << 2;
+                            mantissa >>= shift;
+                            if (after_precis >= ((UV)0x8 << (UVSIZE * 8 - 4))) {
+                                /* Rounding (away from zero).
+                                 *
+                                 * XXX how will this work when the
+                                 * mantissa is 64 bits wide and all
+                                 * one bits? */
+                                mantissa++;
+                            }
+                            mantissa <<= shift;
+                        } else {
+                            zerotail = precis - hi_ix;
+                        }
+                    } else {
+                        /* Strip trailing zero nibbles. */
+                        while ((mantissa & ((UV)0xF << (lo_ix << 2))) == 0) {
+                            lo_ix++;
+                        }
+                    }
+
+                    ix = hi_ix;
+                    shift = ix << 2;
+                    hi_nibble = (mantissa & ((UV)0xF << shift)) >> shift;
+                    if (hi_nibble & 0x8)
+                        exponent -= 3;
+                    else if (hi_nibble & 0x4)
+                        exponent -= 2;
+                    else if (hi_nibble & 0x2)
+                        exponent -= 1;
+                    *p++ = xdig[hi_nibble];
+                    ix--;
+                    if (ix >= lo_ix || alt)
+                        *p++ = '.';
+                    for (; ix >= lo_ix; ix--) {
+                        shift -= 4;
+                        *p++ = xdig[(mantissa & ((UV)0xF << shift)) >> shift];
+                    }
+
+                    while (zerotail--)
+                        *p++ = '0';
+
+                    elen = p - PL_efloatbuf;
+                    elen += my_snprintf(p, PL_efloatsize - elen,
+                                        "%c%+d", lower ? 'p' : 'P',
+                                        exponent - 1);
+
+                    if (elen < width && fill == '0') {
+                        STRLEN nzero = width - elen;
+                        char* after_zerox = PL_efloatbuf + 2;  
+                        Move(after_zerox, after_zerox + nzero,
+                             elen - 2, char);
+                        memset(after_zerox, fill, nzero);
+                        elen = width;
+                    }
+                }
+                goto float_converted;
+#endif
+                /* XXX this is a little harsh - we could have a Configure
+                 * scan for %a/%A support (for long doubles, so %La/%LA)
+                 * and use that as a last resort (unportabilities await) */
+		Perl_croak(aTHX_ "Hexadecimal float: unsupported");
+            }
+
 	    {
 		char *ptr = ebuf + sizeof ebuf;
 		*--ptr = '\0';
@@ -11577,11 +11722,11 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
                  * that is safe to use, even though it's not literal */
                 GCC_DIAG_IGNORE(-Wformat-nonliteral);
 #if defined(HAS_LONG_DOUBLE)
-		elen = ((intsize == 'q')
-			? my_snprintf(PL_efloatbuf, PL_efloatsize, ptr, nv)
-			: my_snprintf(PL_efloatbuf, PL_efloatsize, ptr, (double)nv));
+                elen = ((intsize == 'q')
+                        ? my_snprintf(PL_efloatbuf, PL_efloatsize, ptr, nv)
+                        : my_snprintf(PL_efloatbuf, PL_efloatsize, ptr, (double)nv));
 #else
-		elen = my_sprintf(PL_efloatbuf, ptr, nv);
+                elen = my_sprintf(PL_efloatbuf, ptr, nv);
 #endif
                 GCC_DIAG_RESTORE;
 	    }

@@ -77,7 +77,8 @@ $SIG{__WARN__} = sub {
 for (@tests) {
     ($template, $evalData, $result, $comment, $data) = @$_;
     $w = undef;
-    $x = sprintf($template, @$evalData);
+    eval '$x = sprintf($template, @$evalData)';
+    print "# $@" if $@;
     $x = ">$x<" if defined $x;
     substr($x, -1, 0) = $w if $w;
     # $x may have 3 exponent digits, not 2
@@ -179,7 +180,7 @@ __END__
 >%6. 6s<    >''<          >%6. 6s INVALID REDUNDANT< >(See use of $w in code above)<
 >%6 .6s<    >''<          >%6 .6s INVALID REDUNDANT<
 >%6.6 s<    >''<          >%6.6 s INVALID REDUNDANT<
->%A<        >''<          >%A INVALID REDUNDANT<
+>%A<        >0<           ><	 >%A tested in sprintf2.t skip: all<
 >%B<        >2**32-1<     >11111111111111111111111111111111<
 >%+B<       >2**32-1<     >11111111111111111111111111111111<
 >%#B<       >2**32-1<     >0B11111111111111111111111111111111<
@@ -213,7 +214,7 @@ __END__
 >%#X<       >2**32-1<     >0XFFFFFFFF<
 >%Y<        >''<          >%Y INVALID REDUNDANT<
 >%Z<        >''<          >%Z INVALID REDUNDANT<
->%a<        >''<          >%a INVALID REDUNDANT<
+>%a<        >0<           ><	 >%a tested in sprintf2.t skip: all<
 >%b<        >2**32-1<     >11111111111111111111111111111111<
 >%+b<       >2**32-1<     >11111111111111111111111111111111<
 >%#b<       >2**32-1<     >0b11111111111111111111111111111111<

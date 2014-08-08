@@ -2172,6 +2172,12 @@ created on an emergency basis to prevent a core dump.
 (F) The parser has given up trying to parse the program after 10 errors.
 Further error messages would likely be uninformative.
 
+=item Hexadecimal float: unsupported
+
+(F) The hexadecimal floating point (e.g. 0x1.23p-4) is not supported
+on all platforms.  For example it is disabled with the "long doubles"
+configuration option.
+
 =item Hexadecimal number > 0xffffffff non-portable
 
 (W portable) The hexadecimal number you specified is larger than 2**32-1
