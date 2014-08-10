@@ -8,7 +8,7 @@ BEGIN {
     chdir 't' if -d 't';
     require './test.pl';
     eval '0x0p0';
-    print "# $@\n";
+    skip_all("hexadecimal floats unsupported") if $@ =~ /unsupported/;
 }
 
 plan(tests => 79);

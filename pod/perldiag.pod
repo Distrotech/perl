@@ -2172,11 +2172,33 @@ created on an emergency basis to prevent a core dump.
 (F) The parser has given up trying to parse the program after 10 errors.
 Further error messages would likely be uninformative.
 
++=item Hexadecimal float: exponent overflow
+
+(W overflow) The hexadecimal floating point (e.g. 0x1.23p-4)
+has larger exponent than the floating point supports.
+
+=item Hexadecimal float: exponent underflow
+
+(W overflow) The hexadecimal floating point (e.g. 0x1.23p-4)
+has smaller exponent than the floating point supports.
+
+=item Hexadecimal float: mantissa overflow
+
+(W overflow) The hexadecimal floating point (e.g. 0x1.23p-4)
+had more bits in the mantissa (the part between the 0x and the exponent)
+than the floating point supports.
+
 =item Hexadecimal float: unsupported
 
 (F) The hexadecimal floating point (e.g. 0x1.23p-4) is not supported
 on all platforms.  For example it is disabled with the "long doubles"
 configuration option.
+
+=item Hexadecimal float: unsupported
+
+(F) The hexadecimal floating point (e.g. 0x1.23p-4) is not supported
+on all platforms.  For example it is disabled with the "long doubles"
+configuration option, or with 32-bit integers.
 
 =item Hexadecimal number > 0xffffffff non-portable
 
