@@ -4908,9 +4908,8 @@ Perl_yylex(pTHX)
 	}
 	if (PL_lex_formbrack && PL_lex_brackets <= PL_lex_formbrack) {
 	    PL_lex_state = LEX_FORMLINE;
-	    NEXTVAL_NEXTTOKE.ival = 0;
-	    force_next(FORMRBRACK);
-	    TOKEN(';');
+	    YYEMIT(';');
+	    TOKEN(FORMRBRACK);
 	}
 	goto retry;
     case '\r':
@@ -4951,9 +4950,8 @@ Perl_yylex(pTHX)
                 incline(s);
 	    if (PL_lex_formbrack && PL_lex_brackets <= PL_lex_formbrack) {
 		PL_lex_state = LEX_FORMLINE;
-		NEXTVAL_NEXTTOKE.ival = 0;
-		force_next(FORMRBRACK);
-		TOKEN(';');
+		YYEMIT(';');
+		TOKEN(FORMRBRACK);
 	    }
 	}
 	else {
@@ -6622,14 +6620,11 @@ Perl_yylex(pTHX)
 			    goto its_constant;
 			}
 		    }
-		    NEXTVAL_NEXTTOKE.opval =
-			off ? rv2cv_op : pl_yylval.opval;
-		    PL_expect = XOPERATOR;
+		    op_free(off ? pl_yylval.opval : rv2cv_op);
+		    YYEMIT('&');
 		    if (off)
-			 op_free(pl_yylval.opval), force_next(PRIVATEREF);
-		    else op_free(rv2cv_op),	   force_next(WORD);
-		    pl_yylval.ival = 0;
-		    TOKEN('&');
+			pl_yylval.opval = rv2cv_op;
+		    TERM (off ? PRIVATEREF : WORD);
 		}
 
 		/* If followed by var or block, call it a method (unless sub) */
