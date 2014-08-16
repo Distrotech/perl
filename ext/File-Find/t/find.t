@@ -24,7 +24,7 @@ BEGIN {
 }
 
 my $symlink_exists = eval { symlink("",""); 1 };
-my $test_count = 102;
+my $test_count = 109;
 $test_count += 127 if $symlink_exists;
 $test_count += 26 if $^O eq 'MSWin32';
 $test_count += 2 if $^O eq 'MSWin32' and $symlink_exists;
@@ -79,6 +79,50 @@ $::count_taint = 0;
 finddepth({wanted => sub { ++$::count_taint if $_ eq 'taint.t'; } },
     File::Spec->curdir);
 is($::count_taint, 1, "'finddepth' found exactly 1 file named 'taint.t'");
+
+##### RT #122547 #####
+# Do find() and finddepth() correctly gag on invalid options?
+{
+    my $bad_option = 'foobar';
+    my $second_bad_option = 'really_foobar';
+
+    $::count_taint = 0;
+    local $@;
+    eval {
+        find(
+            {
+                wanted => sub { ++$::count_taint if $_ eq 'taint.t'; },
+                $bad_option => undef,
+            },
+            File::Spec->curdir
+        );
+    };
+    like($@, qr/Invalid option/,
+        "find() detected invalid option");
+    like($@, qr/$bad_option/,
+        "bad option: $bad_option");
+    is($::count_taint, 0, "count_taint not incremented");
+
+    $::count_taint = 0;
+    local $@;
+    eval {
+        finddepth(
+            {
+                wanted => sub { ++$::count_taint if $_ eq 'taint.t'; },
+                $bad_option => undef,
+                $second_bad_option => undef,
+            },
+            File::Spec->curdir
+        );
+    };
+    like($@, qr/Invalid option/,
+        "finddepth() detected invalid option");
+    like($@, qr/$bad_option/,
+        "bad option: $bad_option");
+    like($@, qr/$second_bad_option/,
+        "second bad option: $second_bad_option");
+    is($::count_taint, 0, "count_taint not incremented");
+}
 
 my $FastFileTests_OK = 0;
 
