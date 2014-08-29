@@ -7361,6 +7361,7 @@ Perl_newMYSUB(pTHX_ I32 floor, OP *o, OP *proto, OP *attrs, OP *block)
 		    PadnameLEN(name)-1 * (PadnameUTF8(name) ? -1 : 1), 0
 		)
 	    );
+	    CvLEXICAL_on(*spot);
 	}
 	if (mg) {
 	    assert(mg->mg_obj);
@@ -7487,6 +7488,7 @@ Perl_newMYSUB(pTHX_ I32 floor, OP *o, OP *proto, OP *attrs, OP *block)
 	*spot = cv;
     }
    setname:
+    CvLEXICAL_on(cv);
     if (!CvNAME_HEK(cv)) {
 	CvNAME_HEK_set(cv,
 	 hek
