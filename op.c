@@ -823,8 +823,8 @@ Perl_op_clear(pTHX_ OP *o)
 	}
 	break;
     case OP_METHOD_NAMED:
-        SvREFCNT_dec(cMETHOPx(o)->meth_sv);
-        cMETHOPx(o)->meth_sv = NULL;
+        SvREFCNT_dec(cMETHOPx(o)->op_u.op_meth_sv);
+        cMETHOPx(o)->op_u.op_meth_sv = NULL;
 #ifdef USE_ITHREADS
         if (o->op_targ) {
             pad_swipe(o->op_targ, 1);
@@ -2125,7 +2125,7 @@ S_finalize_op(pTHX_ OP* o)
 #ifdef USE_ITHREADS
     /* Relocate all the METHOP's SVs to the pad for thread safety. */
     case OP_METHOD_NAMED:
-        op_relocate_sv(&cMETHOPx(o)->meth_sv, &o->op_targ);
+        op_relocate_sv(&cMETHOPx(o)->op_u.op_meth_sv, &o->op_targ);
         break;
 #endif
 
@@ -4306,9 +4306,9 @@ Constructs, checks, and returns an op of method type with a method name
 evaluated at runtime. I<type> is the opcode. I<flags> gives the eight
 bits of C<op_flags>, except that C<OPf_KIDS> will be set automatically,
 and, shifted up eight bits, the eight bits of C<op_private>, except that
-the bit with value 1 is automatically set. I<first> supplies an op which
-evaluates method name; it is consumed by this function and become part
-of the constructed op tree.
+the bit with value 1 is automatically set. I<dynamic_meth> supplies an
+op which evaluates method name; it is consumed by this function and 
+become part of the constructed op tree.
 Supported optypes: OP_METHOD.
 
 =cut
@@ -4319,19 +4319,19 @@ S_newMETHOP_internal(pTHX_ I32 type, I32 flags, OP* dynamic_meth, SV* const_meth
     dVAR;
     METHOP *methop;
    
-    assert((PL_opargs[type] & OA_CLASS_MASK) == OA_UNOP || (PL_opargs[type] & OA_CLASS_MASK) == OA_SVOP);
+    assert((PL_opargs[type] & OA_CLASS_MASK) == OA_METHOP);
    
     NewOp(1101, methop, 1, METHOP);
     if (dynamic_meth) {
         if (PL_opargs[type] & OA_MARK) dynamic_meth = force_list(dynamic_meth, 1);
         methop->op_flags = (U8)(flags | OPf_KIDS);
-        methop->op_first = dynamic_meth;
+        methop->op_u.op_first = dynamic_meth;
         methop->op_private = (U8)(1 | (flags >> 8));
     }
     else {
         assert(const_meth);
         methop->op_flags = (U8)(flags & ~OPf_KIDS);
-        methop->meth_sv = const_meth;
+        methop->op_u.op_meth_sv = const_meth;
         methop->op_private = (U8)(0 | (flags >> 8));
         methop->op_next = (OP*)methop;
     }

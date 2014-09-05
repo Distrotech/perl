@@ -60,7 +60,8 @@ typedef enum {
     OPc_PADOP,	/* 8 */
     OPc_PVOP,	/* 9 */
     OPc_LOOP,	/* 10 */
-    OPc_COP	/* 11 */
+    OPc_COP,	/* 11 */
+    OPc_METHOP	/* 12 */
 } opclass;
 
 static const char* const opclassnames[] = {
@@ -75,7 +76,8 @@ static const char* const opclassnames[] = {
     "B::PADOP",
     "B::PVOP",
     "B::LOOP",
-    "B::COP"	
+    "B::COP",
+    "B::METHOP"
 };
 
 static const size_t opsizes[] = {
@@ -90,7 +92,8 @@ static const size_t opsizes[] = {
     sizeof(PADOP),
     sizeof(PVOP),
     sizeof(LOOP),
-    sizeof(COP)	
+    sizeof(COP),
+    sizeof(METHOP)
 };
 
 #define MY_CXT_KEY "B::_guts" XS_VERSION
@@ -232,6 +235,8 @@ cc_opclass(pTHX_ const OP *o)
 	    return OPc_BASEOP;
 	else
 	    return OPc_PVOP;
+    case OA_METHOP:
+	return OPc_METHOP;
     }
     warn("can't determine class of operator %s, assuming BASEOP\n",
 	 OP_NAME(o));
@@ -586,6 +591,7 @@ typedef PADOP	*B__PADOP;
 typedef PVOP	*B__PVOP;
 typedef LOOP	*B__LOOP;
 typedef COP	*B__COP;
+typedef METHOP  *B__METHOP;
 
 typedef SV	*B__SV;
 typedef SV	*B__IV;
@@ -734,6 +740,10 @@ struct OP_methods {
   { STR_WITH_LEN("lastsib"), op_offset_special, 0,                     },/*51*/
   { STR_WITH_LEN("parent"),  op_offset_special, 0,                     },/*52*/
 #  endif
+#endif
+#if PERL_VERSION >= 21
+  { STR_WITH_LEN("first"),   OPp, STRUCT_OFFSET(struct methop, op_u.op_first),  },/*53*/
+  { STR_WITH_LEN("meth_sv"), SVp, STRUCT_OFFSET(struct methop, op_u.op_meth_sv),},/*54*/
 #endif
 };
 
@@ -1012,6 +1022,8 @@ next(o)
 	B::OP::folded        = 50
 	B::OP::lastsib       = 51
 	B::OP::parent        = 52
+	B::METHOP::first     = 53
+	B::METHOP::meth_sv   = 54
     PREINIT:
 	SV *ret;
     PPCODE:

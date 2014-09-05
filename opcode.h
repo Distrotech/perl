@@ -1899,7 +1899,7 @@ EXTCONST U32 PL_opargs[] = {
 	0x00000304,	/* andassign */
 	0x00000304,	/* orassign */
 	0x00000304,	/* dorassign */
-	0x00000140,	/* method */
+	0x00000e40,	/* method */
 	0x00002149,	/* entersub */
 	0x00000100,	/* leavesub */
 	0x00000100,	/* leavesublv */
@@ -1925,7 +1925,7 @@ EXTCONST U32 PL_opargs[] = {
 	0x00000d44,	/* dump */
 	0x00000d44,	/* goto */
 	0x00009b44,	/* exit */
-	0x00000640,	/* method_named */
+	0x00000e40,	/* method_named */
 	0x00000340,	/* entergiven */
 	0x00000100,	/* leavegiven */
 	0x00000340,	/* enterwhen */

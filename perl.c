@@ -2696,7 +2696,7 @@ Perl_call_sv(pTHX_ SV *sv, VOL I32 flags)
         if ( flags & G_METHOD_NAMED ) {
             method_op.op_ppaddr = PL_ppaddr[OP_METHOD_NAMED];
             method_op.op_type = OP_METHOD_NAMED;
-            method_op.meth_sv = sv;
+            method_op.op_u.op_meth_sv = sv;
         } else {
             method_op.op_ppaddr = PL_ppaddr[OP_METHOD];
             method_op.op_type = OP_METHOD;

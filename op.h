@@ -195,13 +195,12 @@ struct listop {
     OP *	op_last;
 };
 
-/* METHOP is either extended UNOP (OP_METHOD) or extended SVOP (OP_METHOD_*) */
 struct methop {
     BASEOP
     union {
-        OP* op_first; /* when UNOP: optree for method name */
-        SV* meth_sv; /* when SVOP: method name */
-    };
+        OP* op_first;   /* optree for method name */
+        SV* op_meth_sv; /* static method name */
+    } op_u;
 };
 
 struct pmop {
@@ -493,6 +492,7 @@ struct loop {
 #define OA_BASEOP_OR_UNOP (11 << OCSHIFT)
 #define OA_FILESTATOP (12 << OCSHIFT)
 #define OA_LOOPEXOP (13 << OCSHIFT)
+#define OA_METHOP (14 << OCSHIFT)
 
 /* Each remaining nybble of PL_opargs (i.e. bits 12..15, 16..19 etc)
  * encode the type for each arg */
