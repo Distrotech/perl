@@ -2263,6 +2263,7 @@ S_finalize_op(pTHX_ OP* o)
               || family == OA_BASEOP_OR_UNOP
               || family == OA_FILESTATOP
               || family == OA_LOOPEXOP
+              || family == OA_METHOP
               /* I don't know why SASSIGN is tagged as OA_BASEOP - DAPM */
               || type == OP_SASSIGN
               || type == OP_CUSTOM
@@ -4307,7 +4308,7 @@ evaluated at runtime. I<type> is the opcode. I<flags> gives the eight
 bits of C<op_flags>, except that C<OPf_KIDS> will be set automatically,
 and, shifted up eight bits, the eight bits of C<op_private>, except that
 the bit with value 1 is automatically set. I<dynamic_meth> supplies an
-op which evaluates method name; it is consumed by this function and 
+op which evaluates method name; it is consumed by this function and
 become part of the constructed op tree.
 Supported optypes: OP_METHOD.
 
@@ -4318,9 +4319,9 @@ static OP*
 S_newMETHOP_internal(pTHX_ I32 type, I32 flags, OP* dynamic_meth, SV* const_meth) {
     dVAR;
     METHOP *methop;
-   
+
     assert((PL_opargs[type] & OA_CLASS_MASK) == OA_METHOP);
-   
+
     NewOp(1101, methop, 1, METHOP);
     if (dynamic_meth) {
         if (PL_opargs[type] & OA_MARK) dynamic_meth = force_list(dynamic_meth, 1);
@@ -4339,9 +4340,9 @@ S_newMETHOP_internal(pTHX_ I32 type, I32 flags, OP* dynamic_meth, SV* const_meth
     methop->op_type = (OPCODE)type;
     methop->op_ppaddr = PL_ppaddr[type];
     methop = (METHOP*) CHECKOP(type, methop);
-   
+
     if (methop->op_next) return (OP*)methop;
-   
+
     return fold_constants(op_integerize(op_std_init((OP *) methop)));
 }
 

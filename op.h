@@ -198,6 +198,9 @@ struct listop {
 struct methop {
     BASEOP
     union {
+        /* op_u.op_first *must* be aligned the same as the op_first
+         * field of the other op types, and op_u.op_meth_sv *must*
+         * be aligned with op_sv */
         OP* op_first;   /* optree for method name */
         SV* op_meth_sv; /* static method name */
     } op_u;
