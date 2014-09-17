@@ -892,13 +892,12 @@ sub concise_op {
     elsif ($h{class} eq "SVOP" or $h{class} eq "PADOP") {
 	unless ($h{name} eq 'aelemfast' and $op->flags & OPf_SPECIAL) {
 	    my $idx = ($h{class} eq "SVOP") ? $op->targ : $op->padix;
-	    my $preferpv = $h{name} eq "method_named";
 	    if ($h{class} eq "PADOP" or !${$op->sv}) {
 		my $sv = (($curcv->PADLIST->ARRAY)[1]->ARRAY)[$idx];
-		$h{arg} = "[" . concise_sv($sv, \%h, $preferpv) . "]";
+		$h{arg} = "[" . concise_sv($sv, \%h, 0) . "]";
 		$h{targarglife} = $h{targarg} = "";
 	    } else {
-		$h{arg} = "(" . concise_sv($op->sv, \%h, $preferpv) . ")";
+		$h{arg} = "(" . concise_sv($op->sv, \%h, 0) . ")";
 	    }
 	}
     }

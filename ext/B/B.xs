@@ -742,8 +742,8 @@ struct OP_methods {
 #  endif
 #endif
 #if PERL_VERSION >= 21
-  { STR_WITH_LEN("first"),   OPp, STRUCT_OFFSET(struct methop, op_u.op_first),  },/*53*/
-  { STR_WITH_LEN("meth_sv"), SVp, STRUCT_OFFSET(struct methop, op_u.op_meth_sv),},/*54*/
+  { STR_WITH_LEN("first"),   op_offset_special, 0,                     },/*53*/
+  { STR_WITH_LEN("meth_sv"), op_offset_special, 0,                     },/*54*/
 #endif
 };
 
@@ -1219,6 +1219,25 @@ next(o)
 		break;
 	    case 52: /* B::OP::parent */
 		ret = make_op_object(aTHX_ op_parent(o));
+		break;
+	    case 53: /* B::METHOP::first   */
+                /* METHOP struct has an op_first/op_meth_sv union
+                 * as its first extra field. How to interpret the
+                 * union depends on the op type. For the purposes of
+                 * B, we treat it as a struct with both fields present,
+                 * where one of the fields always happens to be null
+                 * (i.e. we return NULL in preference to croaking with
+                 * 'method not implemented').
+                 */
+		ret = make_op_object(aTHX_
+                            o->op_type == OP_METHOD
+                                ? cMETHOPx(o)->op_u.op_first : NULL);
+		break;
+	    case 54: /* B::METHOP::meth_sv */
+                /* see comment above about METHOP */
+		ret = make_sv_object(aTHX_
+                            o->op_type == OP_METHOD
+                                ? NULL : cMETHOPx(o)->op_u.op_meth_sv);
 		break;
 	    default:
 		croak("method %s not implemented", op_methods[ix].name);
