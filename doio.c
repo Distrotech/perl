@@ -1051,6 +1051,7 @@ Perl_do_close(pTHX_ GV *gv, bool not_implicit)
     return retval;
 }
 
+#include "perlio.h"
 #include "perliol.h" /* PerlIO_restore_errno needs this */
 
 bool
