@@ -6184,7 +6184,11 @@ PP(pp_refassign)
 
 PP(pp_lvref)
 {
-    DIE(aTHX_ "Unimplemented");
+    dSP;
+    SV * const ret = sv_2mortal(newSV_type(SVt_PVMG));
+    sv_magic(ret, TOPs, PERL_MAGIC_lvref, NULL, 0);
+    SETs(ret);
+    return NORMAL;
 }
 
 /*
