@@ -3080,7 +3080,7 @@ EXTCONST U16  PL_op_private_bitdefs[] = {
     /* fc            */ 0x0003,
     /* padrange      */ 0x25bc, 0x019b,
     /* refassign     */ 0x25bc, 0x0067,
-    /* lvref         */ 0x0003,
+    /* lvref         */ 0x25bc, 0x0003,
 
 };
 
@@ -3469,7 +3469,7 @@ EXTCONST U8 PL_op_private_valid[] = {
     /* CLONECV    */ (0),
     /* PADRANGE   */ (OPpPADRANGE_COUNTMASK|OPpLVAL_INTRO),
     /* REFASSIGN  */ (OPpARG2_MASK|OPpLVAL_INTRO),
-    /* LVREF      */ (OPpARG1_MASK),
+    /* LVREF      */ (OPpARG1_MASK|OPpLVAL_INTRO),
 
 };
 
