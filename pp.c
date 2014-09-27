@@ -6240,7 +6240,7 @@ PP(pp_lvref)
     SV * const arg = PL_op->op_flags & OPf_STACKED ? POPs : NULL;
     sv_magic(ret, arg,
 	     PERL_MAGIC_lvref, (char *)elem, elem ? HEf_SVKEY : ARGTARG);
-    if (PL_op->op_private & OPpLVAL_INTRO) {
+    if (UNLIKELY(PL_op->op_private & OPpLVAL_INTRO)) {
       if (elem) {
 	MAGIC *mg;
 	HV *stash;
@@ -6269,7 +6269,7 @@ PP(pp_lvrefslice)
     const bool localizing = PL_op->op_private & OPpLVAL_INTRO;
     bool can_preserve = FALSE;
 
-    if (localizing) {
+    if (UNLIKELY(localizing)) {
 	MAGIC *mg;
 	HV *stash;
 	SV **svp;
