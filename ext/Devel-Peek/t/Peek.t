@@ -584,7 +584,8 @@ do_test('scalar with pos magic',
     MG_VIRTUAL = &PL_vtbl_mglob
     MG_TYPE = PERL_MAGIC_regex_global\\(g\\)
     MG_FLAGS = 0x01					# $] < 5.019003
-    MG_FLAGS = 0x41					# $] >=5.019003
+    MG_FLAGS = 0x41			# $] >=5.019003 &&$] < 5.021005
+    MG_FLAGS = 0x60					# $] >=5.021005
       MINMATCH
       BYTES						# $] >=5.019003
 ');
@@ -613,10 +614,11 @@ if (${^TAINT}) {
   LEN = \d+
   MAGIC = $ADDR
     MG_VIRTUAL = &PL_vtbl_envelem
-    MG_TYPE = PERL_MAGIC_envelem\\(e\\)
-(?:    MG_FLAGS = 0x01
-      TAINTEDDIR
-)?    MG_LEN = -?\d+
+    MG_TYPE = PERL_MAGIC_envelem\\(e\\)(?:
+    MG_FLAGS = 0x01					# $] < 5.021005
+    MG_FLAGS = 0x20					# $] >=5.021005
+      TAINTEDDIR)?
+    MG_LEN = -?\d+
     MG_PTR = $ADDR (?:"(?i:PATH)"|=> HEf_SVKEY
     SV = PV(?:IV)?\\($ADDR\\) at $ADDR
       REFCNT = \d+
