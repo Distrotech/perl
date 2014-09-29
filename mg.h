@@ -31,14 +31,19 @@ struct magic {
     char*	mg_ptr;
 };
 
-#define MGf_TAINTEDDIR 1        /* PERL_MAGIC_envelem only */
-#define MGf_MINMATCH   1        /* PERL_MAGIC_regex_global only */
-#define MGf_REQUIRE_GV 1        /* PERL_MAGIC_checkcall only */
+/* Generic magic flags */
+
+#define MGf_LOCAL      1	/* has an svt_local MGVTBL entry */
 #define MGf_REFCOUNTED 2
 #define MGf_GSKIP      4	/* skip further GETs until after next SET */
 #define MGf_COPY       8	/* has an svt_copy  MGVTBL entry */
 #define MGf_DUP     0x10 	/* has an svt_dup   MGVTBL entry */
-#define MGf_LOCAL   0x20	/* has an svt_local MGVTBL entry */
+
+/* Flags specific to types of magic */
+
+#define MGf_TAINTEDDIR 0x20     /* PERL_MAGIC_envelem only */
+#define MGf_REQUIRE_GV 0x20     /* PERL_MAGIC_checkcall only */
+#define MGf_MINMATCH   0x20     /* PERL_MAGIC_regex_global only */
 #define MGf_BYTES   0x40        /* PERL_MAGIC_regex_global only */
 
 #define MgTAINTEDDIR(mg)	(mg->mg_flags & MGf_TAINTEDDIR)
