@@ -45,6 +45,7 @@ struct magic {
 #define MGf_REQUIRE_GV 0x20     /* PERL_MAGIC_checkcall only */
 #define MGf_MINMATCH   0x20     /* PERL_MAGIC_regex_global only */
 #define MGf_BYTES   0x40        /* PERL_MAGIC_regex_global only */
+/*      OPpLVREF_TYPE  0x60        PERL_MAGIC_lvref only */
 
 #define MgTAINTEDDIR(mg)	(mg->mg_flags & MGf_TAINTEDDIR)
 #define MgTAINTEDDIR_on(mg)	(mg->mg_flags |= MGf_TAINTEDDIR)
