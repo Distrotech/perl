@@ -6281,6 +6281,8 @@ PP(pp_lvref)
 				   elem ? HEf_SVKEY : ARGTARG);
     const U8 type = PL_op->op_private & OPpLVREF_TYPE;
     mg->mg_flags |= type;
+    if (PL_op->op_private & OPpLVREF_ITER)
+	mg->mg_flags |= MGf_PERSIST;
     if (UNLIKELY(PL_op->op_private & OPpLVAL_INTRO)) {
       if (elem) {
 	MAGIC *mg;
