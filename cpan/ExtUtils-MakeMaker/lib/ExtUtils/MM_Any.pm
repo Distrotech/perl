@@ -9,7 +9,7 @@ use File::Basename;
 BEGIN { our @ISA = qw(File::Spec); }
 
 # We need $Verbose
-use ExtUtils::MakeMaker qw($Verbose write_file_via_tmp);
+use ExtUtils::MakeMaker qw($Verbose write_file_via_tmp neatvalue);
 
 use ExtUtils::MakeMaker::Config;
 
@@ -510,13 +510,14 @@ Usage might be something like:
     $oneliner = $MM->oneliner('print "Foo\n"');
     $make = '$oneliner > somefile';
 
-All dollar signs must be doubled in the $perl_code if you expect them
-to be interpreted normally, otherwise it will be considered a make
-macro.  Also remember to quote make macros else it might be used as a
-bareword.  For example:
+Dollar signs in the $perl_code will be protected from make using the
+C<quote_literal> method, unless they are recognised as being a make
+variable, C<$(varname)>, in which case they will be left for make
+to expand. Remember to quote make macros else it might be used as a
+bareword. For example:
 
     # Assign the value of the $(VERSION_FROM) make macro to $vf.
-    $oneliner = $MM->oneliner('$$vf = "$(VERSION_FROM)"');
+    $oneliner = $MM->oneliner('$vf = "$(VERSION_FROM)"');
 
 Its currently very simple and may be expanded sometime in the figure
 to include more flexible code and switches.
@@ -650,6 +651,11 @@ The blibdirs.ts target is deprecated.  Depend on blibdirs instead.
 
 =cut
 
+sub _xs_list_basenames {
+    my ($self) = @_;
+    map { (my $b = $_) =~ s/\.xs$//; $b } sort keys %{ $self->{XS} };
+}
+
 sub blibdirs_target {
     my $self = shift;
 
@@ -658,6 +664,14 @@ sub blibdirs_target {
                                            bin script
                                            man1dir man3dir
                                           );
+    if ($self->{XSMULTI}) {
+        for my $ext ($self->_xs_list_basenames) {
+            my ($v, $d, $f) = File::Spec->splitpath($ext);
+            my @d = File::Spec->splitdir($d);
+            shift @d if $d[0] eq 'lib';
+            push @dirs, $self->catdir('$(INST_ARCHLIB)', 'auto', @d, $f);
+	}
+    }
 
     my @exists = map { $_.'$(DFSEP).exists' } @dirs;
 
@@ -696,6 +710,10 @@ clean :: clean_subdirs
 ');
 
     my @files = sort values %{$self->{XS}}; # .c files from *.xs files
+    push @files, map {
+	my $file = $_;
+	map { $file.$_ } $self->{OBJ_EXT}, qw(.def _def.old .bs .bso .exp .base);
+    } $self->_xs_list_basenames;
     my @dirs  = qw(blib _eumm);
 
     # Normally these are all under blib but they might have been
@@ -892,6 +910,110 @@ MAKE_FRAG
 }
 
 
+=head3 xs_dlsyms_ext
+
+Returns file-extension for C<xs_make_dlsyms> method's output file,
+including any "." character.
+
+=cut
+
+sub xs_dlsyms_ext {
+    die "Pure virtual method";
+}
+
+=head3 xs_dlsyms_extra
+
+Returns any extra text to be prepended to the C<$extra> argument of
+C<xs_make_dlsyms>.
+
+=cut
+
+sub xs_dlsyms_extra {
+    '';
+}
+
+=head3 xs_dlsyms_iterator
+
+Iterates over necessary shared objects, calling C<xs_make_dlsyms> method
+for each with appropriate arguments.
+
+=cut
+
+sub xs_dlsyms_iterator {
+    my ($self, $attribs) = @_;
+    if ($self->{XSMULTI}) {
+        my @m;
+        for my $ext ($self->_xs_list_basenames) {
+            my @parts = File::Spec->splitdir($ext);
+            shift @parts if $parts[0] eq 'lib';
+            my $name = join '::', @parts;
+            push @m, $self->xs_make_dlsyms(
+                $attribs,
+                $ext . $self->xs_dlsyms_ext,
+                "$ext.xs",
+                $name,
+                $parts[-1],
+                {}, [], {}, [],
+                $self->xs_dlsyms_extra . q!, 'FILE' => ! . neatvalue($ext),
+            );
+        }
+        return join "\n", @m;
+    } else {
+        return $self->xs_make_dlsyms(
+            $attribs,
+            $self->{BASEEXT} . $self->xs_dlsyms_ext,
+            'Makefile.PL',
+            $self->{NAME},
+            $self->{DLBASE},
+            $attribs->{DL_FUNCS} || $self->{DL_FUNCS} || {},
+            $attribs->{FUNCLIST} || $self->{FUNCLIST} || [],
+            $attribs->{IMPORTS} || $self->{IMPORTS} || {},
+            $attribs->{DL_VARS} || $self->{DL_VARS} || [],
+            $self->xs_dlsyms_extra,
+        );
+    }
+}
+
+=head3 xs_make_dlsyms
+
+    $self->xs_make_dlsyms(
+        \%attribs, # hashref from %attribs in caller
+        "$self->{BASEEXT}.def", # output file for Makefile target
+        'Makefile.PL', # dependency
+        $self->{NAME}, # shared object's "name"
+        $self->{DLBASE}, # last ::-separated part of name
+        $attribs{DL_FUNCS} || $self->{DL_FUNCS} || {}, # various params
+        $attribs{FUNCLIST} || $self->{FUNCLIST} || [],
+        $attribs{IMPORTS} || $self->{IMPORTS} || {},
+        $attribs{DL_VARS} || $self->{DL_VARS} || [],
+        # optional extra param that will be added as param to Mksymlists
+    );
+
+Utility method that returns Makefile snippet to call C<Mksymlists>.
+
+=cut
+
+sub xs_make_dlsyms {
+    my ($self, $attribs, $target, $dep, $name, $dlbase, $funcs, $funclist, $imports, $vars, $extra) = @_;
+    my @m = (
+     "\n$target: $dep\n",
+     q!	$(PERLRUN) -MExtUtils::Mksymlists \\
+     -e "Mksymlists('NAME'=>\"!, $name,
+     q!\", 'DLBASE' => '!,$dlbase,
+     # The above two lines quoted differently to work around
+     # a bug in the 4DOS/4NT command line interpreter.  The visible
+     # result of the bug was files named q('extension_name',) *with the
+     # single quotes and the comma* in the extension build directories.
+     q!', 'DL_FUNCS' => !,neatvalue($funcs),
+     q!, 'FUNCLIST' => !,neatvalue($funclist),
+     q!, 'IMPORTS' => !,neatvalue($imports),
+     q!, 'DL_VARS' => !, neatvalue($vars)
+    );
+    push @m, $extra if defined $extra;
+    push @m, qq!);"\n!;
+    join '', @m;
+}
+
 =head3 dynamic (o)
 
 Defines the dynamic target.
@@ -903,7 +1025,11 @@ sub dynamic {
 
     my($self) = shift;
     '
-dynamic :: $(FIRST_MAKEFILE) $(BOOTSTRAP) $(INST_DYNAMIC)
+dynamic :: $(FIRST_MAKEFILE) $(INST_BOOT) $(INST_DYNAMIC) subdirs_dynamic
+	$(NOECHO) $(NOOP)
+
+# define this here not top_targets in case someone overrides that
+subdirs_dynamic ::
 	$(NOECHO) $(NOOP)
 ';
 }
@@ -2788,6 +2914,39 @@ init_platform() rather than put them in constants().
 
 sub platform_constants {
     return '';
+}
+
+=head3 post_constants (o)
+
+Returns an empty string per default. Dedicated to overrides from
+within Makefile.PL after all constants have been defined.
+
+=cut
+
+sub post_constants {
+    "";
+}
+
+=head3 post_initialize (o)
+
+Returns an empty string per default. Used in Makefile.PLs to add some
+chunk of text to the Makefile after the object is initialized.
+
+=cut
+
+sub post_initialize {
+    "";
+}
+
+=head3 postamble (o)
+
+Returns an empty string. Can be used in Makefile.PLs to write some
+text to the Makefile at the end.
+
+=cut
+
+sub postamble {
+    "";
 }
 
 =begin private
