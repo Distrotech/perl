@@ -432,12 +432,6 @@ use File::Glob qw(:case);
         ],
     },
 
-    'ExtUtils::Command' => {
-        'DISTRIBUTION' => 'BINGOS/ExtUtils-Command-1.19.tar.gz',
-        'FILES'        => q[cpan/ExtUtils-Command],
-        'EXCLUDED'     => [qr{^xt/}],
-    },
-
     'ExtUtils::Constant' => {
 
         # Nick has confirmed that while we have diverged from CPAN,
@@ -468,7 +462,7 @@ use File::Glob qw(:case);
     },
 
     'ExtUtils::MakeMaker' => {
-        'DISTRIBUTION' => 'BINGOS/ExtUtils-MakeMaker-7.04.tar.gz',
+        'DISTRIBUTION' => 'BINGOS/ExtUtils-MakeMaker-7.05_05.tar.gz',
         'FILES'        => q[cpan/ExtUtils-MakeMaker],
         'EXCLUDED'     => [
             qr{^t/lib/Test/},
