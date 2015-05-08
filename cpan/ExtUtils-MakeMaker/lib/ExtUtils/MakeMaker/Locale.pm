@@ -1,7 +1,7 @@
 package ExtUtils::MakeMaker::Locale;
 
 use strict;
-our $VERSION = "7.04";
+our $VERSION = "7.04_01";
 
 use base 'Exporter';
 our @EXPORT_OK = qw(
@@ -47,7 +47,9 @@ sub _init {
 		$ENCODING_CONSOLE_OUT = "cp$cp" if $cp;
 	    };
 	    # Invoking the 'chcp' program might also work
-	    if (!$ENCODING_CONSOLE_IN && (qx(chcp) || '') =~ /^Active code page: (\d+)/) {
+	    # 32bit chcp (which is used by 32 bit perl) is not available on
+	    # Server 2003 x64, so suppress STDERR in case chcp isn't found
+	    if (!$ENCODING_CONSOLE_IN && (qx(chcp 2>NUL) || '') =~ /^Active code page: (\d+)/) {
 		$ENCODING_CONSOLE_IN = "cp$1";
 	    }
 	}
