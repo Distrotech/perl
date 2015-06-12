@@ -1348,21 +1348,18 @@ Perl_dowantarray(pTHX)
 I32
 Perl_block_gimme(pTHX)
 {
-    const I32 cxix = dopoptosub(cxstack_ix);
-    if (cxix < 0)
-	return G_VOID;
-
-    switch (cxstack[cxix].blk_gimme) {
-    case G_VOID:
-	return G_VOID;
-    case G_SCALAR:
-	return G_SCALAR;
-    case G_ARRAY:
-	return G_ARRAY;
-    default:
-	Perl_croak(aTHX_ "panic: bad gimme: %d\n", cxstack[cxix].blk_gimme);
+    U8 gimme;
+    PERL_CONTEXT *cx = &cxstack[cxstack_ix];
+    if (cxstack_ix < 0 || CxTYPE(cx) != CXt_SUB) {
+        const I32 cxix = dopoptosub(cxstack_ix);
+        if (cxix < 0)
+            return G_VOID;
+        cx = &cxstack[cxix];
     }
-    NOT_REACHED; /* NOTREACHED */
+    gimme = (cx->blk_gimme & G_WANT);
+    if (!gimme)
+	Perl_croak(aTHX_ "panic: bad gimme: %d\n", gimme);
+    return gimme;
 }
 
 I32
