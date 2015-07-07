@@ -650,6 +650,14 @@ which makes no sense.
 (F) You tried printing an infinity or not-a-number as a character (%c),
 which makes no sense.  Maybe you meant '%s', or just stringifying it?
 
+=item Cannot reorder sv_catpvfn() arguments from va_list
+
+(F) Some XS code tried to use C<sv_catpvfn()> or a related function with a
+format string that specifies explicit indexes for some of the elements, and
+using a C-style variable-argument list (a C<va_list>). This is not currently
+supported. XS authors wanting to do this must instead construct a C array of
+C<SV*> scalars containing the arguments.
+
 =item Cannot set tied @DB::args
 
 (F) C<caller> tried to set C<@DB::args>, but found it tied.  Tying C<@DB::args>
