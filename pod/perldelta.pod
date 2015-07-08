@@ -56,6 +56,12 @@ Using the C<postderef> and C<postderef_qq> features no longer emits a warning.
 Existing code that disables that warning category will continue to work. The
 C<5.24> feature bundle now includes those features.
 
+=head2 printf and sprintf now allow reordered precision arguments
+
+That is, C<< sprintf '|%.*2$|', 2, 3 >> now returns C<|002|>. This extends
+the existing support for reordering arguments used for format fields,
+widths, and vector separators.
+
 =head1 Security
 
 XXX Any security-related notices go here.  In particular, any security
@@ -238,7 +244,11 @@ XXX Changes (i.e. rewording) of diagnostic messages go here
 
 =item *
 
-XXX Describe change here
+The C<printf> and C<sprintf> builtins are now more careful about the
+warnings they emit: argument reordering now disables the "redundant
+argument" warning in all cases; and invalid format strings are no longer
+treated as absorbing arguments (so "redundant argument" warnings can
+correctly be emitted by such code).
 
 =back
 
@@ -365,7 +375,10 @@ well.
 
 =item *
 
-XXX
+C<sv_catpvf> and related functions (including C<sv_vcatpvfn_flags> when
+called with a C<va_list> rather than an array of SV pointers) have never
+handled argument reordering. Attempts to reorder arguments now yield an
+exception, rather than being silently ignored.
 
 =back
 
