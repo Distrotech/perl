@@ -37,13 +37,15 @@ L</Selected Bug Fixes> section.
 
 =head1 Incompatible Changes
 
-XXX For a release on a stable branch, this section aspires to be:
+=head2 Only blanks and tabs are now allowed within C<[...]> within C<(?[...])>.
 
-    There are no changes intentionally incompatible with 5.XXX.XXX
-    If any exist, they are bugs, and we request that you submit a
-    report.  See L</Reporting Bugs> below.
-
-[ List each incompatible change as a =head2 entry ]
+The experimental Extended Bracketed Character Classes can contain
+regular bracketed character classes within them.  These differ from
+regular ones in that white space is generally ignored, unless escaped by
+preceding it with a backslash.  The white space that is ignored is now
+limited to just tab C<\t> and SPACE characters.  Previously, it was any
+white space.  See
+L<perlrecharclass/Extended Bracketed Character Classes>.
 
 =head1 Deprecations
 
