@@ -35,6 +35,14 @@
 
 static const char unees[] =
     "Malformed UTF-8 character (unexpected end of string)";
+static const char cp_above_legal_max[] =
+    "It is deprecated to use code point 0x%"UVXf"; the permissible max is 0x%"UVXf"";
+
+#ifdef EBCDIC
+    #define MAX_NON_DEPRECATED_CP (IV_MAX / 2)
+#else
+    #define MAX_NON_DEPRECATED_CP (IV_MAX)
+#endif
 
 /*
 =head1 Unicode Support
@@ -115,9 +123,11 @@ Perl_uvoffuni_to_utf8_flags(pTHX_ U8 *d, UV uv, UV flags)
 #endif
 
     /* The first problematic code point is the first surrogate */
-    if (   flags    /* It's common to turn off all these */
-        && uv >= UNICODE_SURROGATE_FIRST
-        && ckWARN3_d(WARN_SURROGATE, WARN_NON_UNICODE, WARN_NONCHAR))
+    if (   uv >= UNICODE_SURROGATE_FIRST
+        && (   (   flags
+                && ckWARN3_d(WARN_SURROGATE, WARN_NON_UNICODE, WARN_NONCHAR))
+            || (   UNLIKELY(uv > MAX_NON_DEPRECATED_CP)
+                && ckWARN_d(WARN_DEPRECATED))))
     {
 	if (UNICODE_IS_SURROGATE(uv)) {
 	    if (flags & UNICODE_WARN_SURROGATE) {
@@ -129,7 +139,13 @@ Perl_uvoffuni_to_utf8_flags(pTHX_ U8 *d, UV uv, UV flags)
 	    }
 	}
 	else if (UNICODE_IS_SUPER(uv)) {
-	    if (flags & UNICODE_WARN_SUPER
+            if (   UNLIKELY(uv > MAX_NON_DEPRECATED_CP)
+                && ckWARN_d(WARN_DEPRECATED))
+            {
+		Perl_warner(aTHX_ packWARN(WARN_DEPRECATED),
+                            cp_above_legal_max, uv, MAX_NON_DEPRECATED_CP);
+            }
+            else if (flags & UNICODE_WARN_SUPER
 		|| (UNICODE_IS_FE_FF(uv) && (flags & UNICODE_WARN_FE_FF)))
 	    {
 		Perl_ck_warner_d(aTHX_ packWARN(WARN_NON_UNICODE),
@@ -689,9 +705,11 @@ Perl_utf8n_to_uvchr(pTHX_ const U8 *s, STRLEN curlen, STRLEN *retlen, U32 flags)
 
     /* Here, the input is considered to be well-formed, but it still could be a
      * problematic code point that is not allowed by the input parameters. */
-    if (uv >= UNICODE_SURROGATE_FIRST /* isn't problematic if < this */
-	&& (flags & (UTF8_DISALLOW_ILLEGAL_INTERCHANGE
-		     |UTF8_WARN_ILLEGAL_INTERCHANGE)))
+    if (   uv >= UNICODE_SURROGATE_FIRST /* isn't problematic if < this */
+	&& (   (flags & (UTF8_DISALLOW_ILLEGAL_INTERCHANGE
+		        |UTF8_WARN_ILLEGAL_INTERCHANGE))
+            || (   UNLIKELY(uv > MAX_NON_DEPRECATED_CP)
+                && ckWARN_d(WARN_DEPRECATED))))
     {
 	if (UNICODE_IS_SURROGATE(uv)) {
 
@@ -714,6 +732,7 @@ Perl_utf8n_to_uvchr(pTHX_ const U8 *s, STRLEN curlen, STRLEN *retlen, U32 flags)
 		sv = sv_2mortal(Perl_newSVpvf(aTHX_ "Code point 0x%04"UVXf" is not Unicode, may not be portable", uv));
 		pack_warn = packWARN(WARN_NON_UNICODE);
 	    }
+
 #ifndef EBCDIC	/* Can never have the equivalent of FE nor FF on EBCDIC, since
                    not representable in UTF-EBCDIC */
 
@@ -739,6 +758,13 @@ Perl_utf8n_to_uvchr(pTHX_ const U8 *s, STRLEN curlen, STRLEN *retlen, U32 flags)
 	    if (flags & UTF8_DISALLOW_SUPER) {
 		goto disallowed;
 	    }
+
+            if (UNLIKELY(uv > MAX_NON_DEPRECATED_CP) && ckWARN_d(WARN_DEPRECATED))
+            {
+                sv = sv_2mortal(Perl_newSVpvf(aTHX_ cp_above_legal_max,
+                                              uv, MAX_NON_DEPRECATED_CP));
+                pack_warn = packWARN(WARN_DEPRECATED);
+            }
 	}
 	else if (UNICODE_IS_NONCHAR(uv)) {
 	    if ((flags & (UTF8_WARN_NONCHAR|UTF8_CHECK_ONLY)) == UTF8_WARN_NONCHAR
@@ -1800,6 +1826,12 @@ Perl_to_utf8_case(pTHX_ const U8 *p, U8* ustrp, STRLEN *lenp,
 	    }
 	}
 	else if (UNICODE_IS_SUPER(uv1)) {
+            if (   UNLIKELY(uv1 > MAX_NON_DEPRECATED_CP)
+                && ckWARN_d(WARN_DEPRECATED))
+            {
+		Perl_warner(aTHX_ packWARN(WARN_DEPRECATED),
+                            cp_above_legal_max, uv1, MAX_NON_DEPRECATED_CP);
+            }
 	    if (ckWARN_d(WARN_NON_UNICODE)) {
 		const char* desc = (PL_op) ? OP_DESC(PL_op) : normal;
 		Perl_warner(aTHX_ packWARN(WARN_NON_UNICODE),
@@ -3845,7 +3877,16 @@ Perl_check_utf8_print(pTHX_ const U8* s, const STRLEN len)
 	if (UNLIKELY(isUTF8_POSSIBLY_PROBLEMATIC(*s))) {
 	    STRLEN char_len;
 	    if (UTF8_IS_SUPER(s, e)) {
-		if (ckWARN_d(WARN_NON_UNICODE)) {
+                /*
+                if (   UNLIKELY(uv > MAX_NON_DEPRECATED_CP)
+                    && ckWARN_d(WARN_DEPRECATED))
+                {
+                    Perl_warner(aTHX_ packWARN(WARN_DEPRECATED),
+                                cp_above_legal_max, uv, MAX_NON_DEPRECATED_CP);
+                }
+                else
+                */
+                     if (ckWARN_d(WARN_NON_UNICODE)) {
 		    UV uv = utf8_to_uvchr_buf(s, e, &char_len);
 		    Perl_warner(aTHX_ packWARN(WARN_NON_UNICODE),
 			"Code point 0x%04"UVXf" is not Unicode, may not be portable", uv);
