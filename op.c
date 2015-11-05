@@ -1181,6 +1181,7 @@ Perl_op_null(pTHX_ OP *o)
 
 void
 Perl_op_refcnt_lock(pTHX)
+  PERL_TSA_ACQUIRE(PL_op_mutex)
 {
 #ifdef USE_ITHREADS
     dVAR;
@@ -1191,6 +1192,7 @@ Perl_op_refcnt_lock(pTHX)
 
 void
 Perl_op_refcnt_unlock(pTHX)
+  PERL_TSA_RELEASE(PL_op_mutex)
 {
 #ifdef USE_ITHREADS
     dVAR;
