@@ -751,6 +751,8 @@ S_ithread_create(
     }
     PERL_SET_CONTEXT(aTHX);
     if (!thread) {
+        /* This lock was acquired in ithread_create()
+         * prior to calling S_ithread_create(). */
         MUTEX_UNLOCK(&MY_POOL.create_destruct_mutex);
         {
           int fd = PerlIO_fileno(Perl_error_log);
@@ -992,6 +994,8 @@ S_ithread_create(
     if (rc_stack_size || rc_thread_create) {
 #endif
         /* Must unlock mutex for destruct call */
+        /* This lock was acquired in ithread_create()
+         * prior to calling S_ithread_create(). */
         MUTEX_UNLOCK(&MY_POOL.create_destruct_mutex);
         thread->state |= PERL_ITHR_NONVIABLE;
         S_ithread_free(aTHX_ thread);   /* Releases MUTEX */
@@ -1143,6 +1147,7 @@ ithread_create(...)
             XSRETURN_UNDEF;     /* Mutex already unlocked */
         }
         ST(0) = sv_2mortal(S_ithread_to_SV(aTHX_ Nullsv, thread, classname, FALSE));
+        /* This lock was created and acquired in S_ithread_create(). */
         MUTEX_UNLOCK(&MY_POOL.create_destruct_mutex);
 
         /* Let thread run. */
