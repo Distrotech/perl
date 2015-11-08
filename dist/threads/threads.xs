@@ -727,6 +727,7 @@ S_ithread_create(
         int       exit_opt,
         int       params_start,
         int       num_params)
+  PERL_TSA_NO_TSA  /* Annotations not flexible enough. */
 {
     dTHXa(parent_perl);
     ithread     *thread;
