@@ -1016,8 +1016,8 @@ S_ithread_create(
     return (thread);
 }
 
-#endif /* USE_ITHREADS */
 
+#endif /* USE_ITHREADS */
 
 MODULE = threads    PACKAGE = threads    PREFIX = ithread_
 PROTOTYPES: DISABLE
@@ -1153,7 +1153,23 @@ ithread_create(...)
 
         /* Let thread run. */
         /* See S_ithread_run() for more detail. */
+
+	/* The TSA is not powerful enough to annotate away the below
+	* warnings; furthermore, refactoring this into smaller
+	* function would be needed to better annotate the mutex use,
+	* especially the conditional unlocking is messy to describe.
+	*
+	* Therefore, the best we can do is to use a blunt weapon of
+	* disabling the thread-safety for this final section with
+	* gcc/clang diagnostics pragma.
+	*
+	* However, thanks to the stupid of XS, we cannot turn off the
+	* pragma in this function (even CLEANUP would be inserted too
+	* early), so we need to do the turning off in the next function. */
+	GCC_DIAG_IGNORE(-Wthread-safety);
+	/* threads.xs: warning: releasing mutex 'thread->mutex' that was not held [-Wthread-safety-analysis] */
         MUTEX_UNLOCK(&thread->mutex);
+	/* threads.c:  warning: mutex 'my_poolp->create_destruct_mutex' is not held on every path through here [-Wthread-safety-analysis] */
 
         /* XSRETURN(1); - implied */
 
@@ -1169,6 +1185,7 @@ ithread_list(...)
         int state;
         dMY_POOL;
     PPCODE:
+	GCC_DIAG_RESTORE; /* GCC_DIAG_IGNORE in ithread_create() above. */
         /* Class method only */
         if (SvROK(ST(0))) {
             Perl_croak(aTHX_ "Usage: threads->list(...)");
