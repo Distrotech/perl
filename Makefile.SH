@@ -1354,6 +1354,9 @@ _cleaner2:
 	-rmdir lib/autodie/Scope lib/autodie lib/XS lib/Win32API lib/VMS
 	-rmdir lib/Unicode/Collate/Locale lib/Unicode/Collate/CJK
 	-rmdir lib/Unicode/Collate lib/Tie/Hash lib/Thread lib/Text
+	-rmdir lib/Test2/Util lib/Test2/IPC/Driver lib/Test2/IPC
+	-rmdir lib/Test2/Hub/Interceptor lib/Test2/Hub lib/Test2/Global
+	-rmdir lib/Test2/Formatter lib/Test2/Event lib/Test2/Context lib/Test2
 	-rmdir lib/Test/use lib/Test/Tester lib/Test/Builder/Tester
 	-rmdir lib/Test/Builder/IO lib/Test/Builder lib/Test lib/Term
 	-rmdir lib/TAP/Parser/YAMLish lib/TAP/Parser/SourceHandler
@@ -1481,6 +1484,7 @@ test_prep test-prep: test_prep_pre \$(MINIPERL_EXE) \$(unidatafiles) \$(PERL_EXE
 	$to cpan/Filter-Util-Call/filter-util.pl
 	$to cpan/Digest-MD5/*
 	$to cpan/Digest-SHA/*
+	$to cpan/Test2/*
 	$to cpan/Test-Simple/*
 	$to cpan/Pod-Parser/lib/*
 	$to cpan/Test-Harness/*

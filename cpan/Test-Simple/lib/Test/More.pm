@@ -17,7 +17,7 @@ sub _carp {
     return warn @_, " at $file line $line\n";
 }
 
-our $VERSION = '1.001014';
+our $VERSION = '1.302013_003';
 $VERSION = eval $VERSION;    ## no critic (BuiltinFunctions::ProhibitStringyEval)
 
 use Test::Builder::Module 0.99;
@@ -1902,8 +1902,6 @@ It's the thing that powers C<make test> and where the C<prove> utility
 comes from.
 
 =head2 BUNDLES
-
-L<Bundle::Test> installs a whole bunch of useful test modules.
 
 L<Test::Most> Most commonly needed test functions and features.
 
